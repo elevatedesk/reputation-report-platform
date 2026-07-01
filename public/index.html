@@ -1,479 +1,469 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Reputation Report™ | EVG</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --black:#030303; --white:#fff; --soft:#faf8f7; --line:#ead9d4; --text:#151515; --muted:#7d7370;
-  --rose:#d68173; --rose2:#f4c4b7; --rose3:#b96053; --green:#4f9563; --red:#b84842; --yellow:#d89b2d;
-  --shadow:0 12px 28px rgba(30,20,18,.09);
-}
-*{box-sizing:border-box}
-body{margin:0;background:#f7f3f1;color:var(--text);font-family:Inter,Arial,sans-serif;font-size:14px}
-button,a,.q{cursor:pointer}
-.hidden{display:none!important}
-.app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
-.sidebar{background:#020202;color:#fff;border-right:1px solid var(--rose);position:sticky;top:0;height:100vh;padding:22px 18px}
-.logo{text-align:center;padding:0 10px 24px;border-bottom:1px solid rgba(255,255,255,.08)}
-.logo img{width:205px;max-width:100%;display:block;margin:0 auto}
-.nav{margin-top:28px}
-.nav a{display:flex;align-items:center;gap:16px;color:#fff;text-decoration:none;padding:15px 18px;border-radius:4px;margin:4px 0;font-size:17px;border-bottom:1px solid rgba(255,255,255,.05)}
-.nav a.active{background:linear-gradient(90deg,#cc7767,#f1b7a9);box-shadow:0 10px 22px rgba(214,129,115,.3)}
-.nav svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none}
-.promo{position:absolute;left:22px;right:22px;bottom:38px;border:1px solid var(--rose);border-radius:9px;padding:22px 16px;text-align:center;background:#060606}
-.promo .diamond{font-size:40px;color:var(--rose2);line-height:1}
-.promo h3{font-family:Playfair Display,serif;color:var(--rose2);font-size:19px;margin:10px 0 12px}
-.promo p{margin:0;color:#fff;line-height:1.8;font-size:15px}
-.main{min-width:0}
-.topbar{height:108px;background:#020202;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 36px;border-bottom:1px solid #ddd}
-.brand h1{font-family:Playfair Display,serif;letter-spacing:7px;font-size:35px;line-height:1;margin:0;text-transform:uppercase;font-weight:700}
-.brand p{letter-spacing:5px;color:var(--rose2);font-size:14px;margin:10px 0 0;text-transform:uppercase}
-.top-actions{display:flex;align-items:center;gap:20px}
-.new{background:linear-gradient(90deg,#e2a193,#ffc8bb);border:0;border-radius:6px;padding:16px 31px;font-weight:800;letter-spacing:.5px;font-size:15px}
-.bell{position:relative;font-size:29px}
-.bell span{position:absolute;right:-8px;top:-7px;background:var(--rose);font-size:12px;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px}
-.user{display:flex;align-items:center;gap:13px}
-.avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#f3d5ce,#151515);border:3px solid #fff;display:grid;place-items:center;font-size:24px;font-family:Playfair Display,serif}
-.user strong{display:block;font-size:15px}.user small{color:#ddd;font-size:13px}
-.content{padding:20px 26px 34px}
-.grid{display:grid;gap:18px}
-.top-grid{grid-template-columns:1fr 350px}
-.card{background:#fff;border:1px solid #eadbd7;border-radius:9px;box-shadow:var(--shadow)}
-.search-card{padding:24px 31px}
-.search-card label{display:block;font-size:16px;margin-bottom:13px}
-.search-row{display:grid;grid-template-columns:1fr 280px;gap:26px}
-.input{height:57px;border:1px solid #dfc4bc;border-radius:6px;padding:0 18px;font-size:16px;color:#777;display:flex;align-items:center;justify-content:space-between;background:#fff}
-.input input{border:0;outline:0;width:100%;font-size:16px;font-family:Inter,Arial,sans-serif;color:#151515}
-.btn{height:57px;border:0;border-radius:6px;background:linear-gradient(90deg,#d48678,#f7baad);font-weight:800;color:#fff;font-size:15px}
-.month{padding:26px 31px;display:flex;justify-content:space-between;align-items:center}
-.month h4,.score h4,.panel h4{margin:0 0 8px;text-transform:uppercase;font-size:15px;letter-spacing:.2px}
-.month .num{font-size:40px;font-weight:500;color:#000;line-height:1}
-.month a,.link{color:var(--rose3);text-decoration:none;font-size:14px}
-.docicon{width:74px;height:74px;border-radius:50%;background:#f5ded8;display:grid;place-items:center}
-.profile-grid{grid-template-columns:1fr 350px}
-.profile{padding:28px 34px;display:grid;grid-template-columns:190px 1fr 245px;align-items:center;gap:26px}
-.headshot{width:145px;height:145px;border-radius:50%;background:linear-gradient(135deg,#e7b9af,#141414);border:4px solid #fff;outline:3px solid #f0cbc3;display:grid;place-items:center;font-size:48px;color:white;overflow:hidden;font-family:Playfair Display,serif}
-.profile h2{font-family:Playfair Display,serif;font-size:34px;margin:0 0 10px}
-.meta{color:#555;display:flex;gap:12px;align-items:center;margin:8px 0;flex-wrap:wrap}
-.meta .rose{color:var(--rose3)}
-.badge{border:1px solid #eebfb5;color:var(--rose3);padding:8px 15px;border-radius:5px;font-size:12px;text-transform:uppercase;display:inline-block}
-.actions{display:grid;gap:14px}
-.outline{height:45px;border:1px solid #e3c6bf;border-radius:4px;background:#fff;font-weight:800;letter-spacing:.3px}
-.black{height:48px;border:0;border-radius:4px;background:#050505;color:#fff;font-weight:800;letter-spacing:.4px}
-.score{padding:24px 26px;text-align:center}
-.gauge{width:190px;height:102px;margin:18px auto 6px;border-radius:190px 190px 0 0;border:10px solid #f3e0dc;border-bottom:0;position:relative;overflow:hidden}
-.gauge:before{content:"";position:absolute;left:-10px;top:-10px;width:190px;height:102px;border-radius:190px 190px 0 0;border:10px solid var(--rose);border-bottom:0;transform:rotate(-10deg);transform-origin:bottom center}
-.score .big{font-size:55px;line-height:1;margin-top:-42px;position:relative;background:#fff;display:inline-block;padding:0 18px}
-.score small{display:block;color:#666;font-size:15px}.score .strong{color:var(--rose3);font-size:17px;margin-top:7px}
-.middle{grid-template-columns:430px 1fr 350px}
-.panel{padding:22px 22px}
-.row{display:grid;grid-template-columns:170px 1fr 52px;gap:12px;align-items:center;margin:13px 0;font-size:13px}
-.bar{height:7px;background:#f2e5e2;border-radius:10px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,#c97868,#e6a092);border-radius:10px}
-.snapshot p{line-height:1.7;margin:17px 0;color:#161616}
-.assets{padding:18px 20px}
-.asset{display:grid;grid-template-columns:1fr 26px 42px;gap:8px;margin:8px 0;font-size:14px;align-items:center}
-.yes{color:var(--green);font-weight:800}.no{color:var(--red);font-weight:800}
-.metrics{display:grid;grid-template-columns:repeat(6,1fr);padding:0;overflow:hidden}
-.metric{padding:23px 17px;text-align:center;border-right:1px solid #eadbd7}
-.metric:last-child{border-right:0}.metric .icon{font-size:34px;color:var(--rose3);margin-bottom:6px}
-.metric .value{font-size:25px;color:var(--rose3);margin-bottom:4px}.metric small{color:#111}
-.bottom{grid-template-columns:1fr 1fr 1fr 350px}
-.tags{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
-.tag{border:1px solid #e9beb5;color:#c56f60;background:#fff8f6;border-radius:4px;padding:8px 10px;font-size:12px}
-.risk{display:grid;grid-template-columns:26px 1fr;gap:12px;margin:14px 0;align-items:start}
-.warn{color:var(--yellow);font-size:20px}.ok{color:var(--green);font-size:20px}
-.quick{padding:18px}
-.q{height:47px;border:1px solid #eadbd7;border-radius:6px;margin:8px 0;display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:#fff}
-.page{display:none}.page.active{display:block}
-.intake-form{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.intake-form label{font-weight:700;color:#151515}
-.intake-form input,.intake-form select,.intake-form textarea{width:100%;margin-top:8px;height:48px;border:1px solid #dfc4bc;border-radius:6px;padding:0 14px;font-family:Inter,Arial,sans-serif}
-.intake-form textarea{height:104px;padding:12px 14px;resize:vertical}
-.full{grid-column:1/-1}
-.admin-only{display:none}.is-admin .admin-only{display:flex}.is-admin .admin-block{display:block}.admin-block{display:none}
-.client-mode .admin-only,.client-mode .admin-block{display:none!important}
-.toast{position:fixed;right:22px;bottom:22px;background:#050505;color:#fff;border-left:4px solid var(--rose);padding:16px 18px;border-radius:8px;box-shadow:0 12px 28px rgba(0,0,0,.25);display:none;z-index:10}
-@media(max-width:1200px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.promo{display:none}.top-grid,.profile-grid,.middle,.bottom{grid-template-columns:1fr}.profile{grid-template-columns:1fr;text-align:center}.headshot{margin:auto}.metrics{grid-template-columns:repeat(2,1fr)}.intake-form{grid-template-columns:1fr}.search-row{grid-template-columns:1fr}.topbar{height:auto;gap:18px;align-items:flex-start;padding:22px;flex-direction:column}}
-@media print{.sidebar,.top-actions,.search-card,.actions,.quick{display:none!important}.app{display:block}.topbar{background:#fff;color:#111}.brand p{color:#b96053}.card{box-shadow:none;break-inside:avoid}.content{padding:0}.page{display:block}}
-</style>
-</head>
-<body class="is-admin">
-<div class="app">
-  <aside class="sidebar">
-    <div class="logo"><img src="evg-logo.png" alt="Elevate Visibility Group logo"></div>
-    <div class="nav">
-      <a class="active" onclick="showPage('dashboard', this)"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zM13 21h8V3h-8v18zM3 21h8v-6H3v6z"/></svg> Dashboard</a>
-      <a onclick="showPage('intake', this)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/></svg> Intake</a>
-      <a onclick="showPage('individual', this)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Individual</a>
-      <a onclick="showPage('organization', this)"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg> Organization</a>
-      <a onclick="showPage('rep360', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg> Reputation 360</a>
-      <a onclick="showPage('assetRecovery', this)"><svg viewBox="0 0 24 24"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="M3.3 7L12 12l8.7-5"/></svg> Asset Recovery</a>
-      <a onclick="showPage('socialReviews', this)"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg> Social + Reviews</a>
-      <a class="admin-only" onclick="showPage('admin', this)"><svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5z"/></svg> Admin</a>
-    </div>
-    <div class="promo"><div class="diamond">◇</div><h3>The Reputation Report™</h3><p>See what the world sees<br>before the world decides<br>who you are.</p></div>
-  </aside>
-
-  <main class="main">
-    <div class="topbar">
-      <div class="brand"><h1>The Reputation Report™</h1><p>Visibility & Reputation Intelligence Platform</p></div>
-      <div class="top-actions">
-        <button class="new admin-only" onclick="generateReport()">+ New Report</button>
-        <button class="new" onclick="window.print()">Export PDF</button>
-        <div class="bell">♧<span>3</span></div>
-        <div class="user"><div class="avatar" id="avatarInitials">SM</div><div><strong id="userName">Stefanie Magness</strong><small id="userRole">EVG Admin</small></div></div>
-      </div>
-    </div>
-
-    <div class="content">
-      <div id="dashboard" class="page active">
-        <div class="grid top-grid">
-          <div class="card search-card">
-            <label>Search any person or organization to generate a reputation report</label>
-            <div class="search-row"><div class="input"><input id="searchInput" value="Stefanie Magness"></div><button class="btn" onclick="generateReport()">GENERATE REPORT</button></div>
-          </div>
-          <div class="card month"><div><h4>Reports This Month</h4><div class="num" id="reportsThisMonth">12</div><a>View all reports →</a></div><div class="docicon">▤</div></div>
-        </div>
-
-        <div class="grid profile-grid" style="margin-top:18px">
-          <div class="card profile">
-            <div class="headshot" id="profileInitials">SM</div>
-            <div>
-              <h2 id="profileName">Stefanie Magness</h2>
-              <div class="meta"><span id="profileTitle">Founder & Visibility Consultant</span><span class="rose">|</span><span id="profileOrg">Elevate Visibility Group</span></div>
-              <div class="meta"><span>Visibility & Reputation</span><span>Asset Recovery™</span><span>Reputation 360™</span></div>
-              <span class="badge" id="reportTypeBadge">Reputation 360™</span>
-            </div>
-            <div class="actions"><button class="outline" onclick="showPage('intake')">UPDATE INFORMATION</button><button class="black" onclick="showPage('assetRecovery')">VIEW ASSETS</button></div>
-          </div>
-          <div class="card score"><h4>Overall Reputation Score</h4><div class="gauge"></div><div class="big" id="overallScore">89</div><small>/100</small><div class="strong">Strong Reputation</div></div>
-        </div>
-
-        <div class="grid middle" style="margin-top:18px">
-          <div class="card panel"><h4>Reputation Score Breakdown</h4><div id="scoreRows"></div></div>
-          <div class="card panel snapshot"><h4>Reputation Snapshot</h4><p id="snapshotText"></p><a class="link" onclick="showPage('rep360')">View full analysis →</a></div>
-          <div class="card assets"><h4>Authority Assets</h4><div id="authorityAssets"></div><a class="link" onclick="showPage('individual')">View all assets →</a></div>
-        </div>
-
-        <div class="card metrics" style="margin-top:18px">
-          <div class="metric"><div class="icon">⌕</div><div class="value">23.4K</div><small>Google Results</small></div>
-          <div class="metric"><div class="icon">▤</div><div class="value">118</div><small>News Mentions</small></div>
-          <div class="metric"><div class="icon">♚</div><div class="value">12.4M</div><small>Media Reach</small></div>
-          <div class="metric"><div class="icon">♬</div><div class="value">47</div><small>Speaking Events</small></div>
-          <div class="metric"><div class="icon">♕</div><div class="value">16</div><small>Awards & Rankings</small></div>
-          <div class="metric"><div class="icon">♧</div><div class="value">24.7K</div><small>Social Followers</small></div>
-        </div>
-
-        <div class="grid bottom" style="margin-top:18px">
-          <div class="card panel"><h4>Top News Mentions</h4><div class="newsitem"><div class="pub">EVG</div><div><strong>Visibility Strategies Every Leader Needs</strong><br><small>Positive</small></div></div></div>
-          <div class="card panel"><h4>What You're Known For</h4><div class="tags" id="knownFor"></div></div>
-          <div class="card panel"><h4>Recommended Next Moves</h4><div class="tags" id="opportunityTags"></div></div>
-          <div class="card panel"><h4>Reputation Risk Alerts</h4><div id="riskList"></div></div>
-          <div class="card quick"><h4>Quick Actions</h4><div class="q" onclick="showPage('assetRecovery')">Create Asset Inventory <strong>›</strong></div><div class="q" onclick="showPage('rep360')">Reputation 360™ <strong>›</strong></div><div class="q" onclick="showPage('socialReviews')">Social + Reviews <strong>›</strong></div><div class="q" onclick="showPage('intake')">Update Information <strong>›</strong></div></div>
-        </div>
-      </div>
-
-      <div id="intake" class="page">
-        <div class="card search-card">
-          <h2 style="font-family:Playfair Display,serif;margin-top:0">Client Intake</h2>
-          <div class="intake-form">
-            <label>Report Type<select id="reportType"><option>Reputation 360™</option><option>Individual Reputation Report™</option><option>Organization Reputation Report™</option></select></label>
-            <label>Organization Type<select id="organizationType"><option>Business</option><option>Nonprofit</option><option>Foundation</option><option>University</option><option>Government Agency</option></select></label>
-            <label>Individual Name<input id="personName" value="Stefanie Magness"></label>
-            <label>Title<input id="title" value="Founder & Visibility Consultant"></label>
-            <label>Organization Name<input id="orgName" value="Elevate Visibility Group"></label>
-            <label>Industry<input id="industry" value="Executive visibility, reputation, public relations"></label>
-            <label>Website<input id="website" value="https://www.elevatevisibilitygroup.com"></label>
-            <label>LinkedIn<input id="linkedin" value="https://www.linkedin.com/in/stefanie-magness"></label>
-            <label class="full">Goals<textarea id="goals">Understand what the world sees, what they are known for, what people are saying, what assets are missing, and what visibility strategy should come next.</textarea></label>
-          </div>
-          <button class="new" style="margin-top:18px" onclick="saveIntake()">SAVE INTAKE</button>
-        </div>
-      </div>
-
-      <div id="individual" class="page">
-        <div class="grid middle">
-          <div class="card panel snapshot"><h4>Individual Reputation Report™</h4><p>For executives, high-level career professionals, thought leaders, public figures, political candidates, nonprofit founders, and subject-matter leaders.</p></div>
-          <div class="card panel"><h4>Individual Checks</h4><div class="asset"><span>Google Knowledge Panel</span><span class="no">×</span><small>No</small></div><div class="asset"><span>Wikipedia</span><span class="no">×</span><small>No</small></div><div class="asset"><span>Wikidata</span><span class="no">×</span><small>No</small></div><div class="asset"><span>LinkedIn</span><span class="yes">✓</span><small>Yes</small></div></div>
-          <div class="card panel"><h4>Individual Opportunity</h4><div class="tags"><span class="tag">Bio Refresh</span><span class="tag">Speaker Page</span><span class="tag">Media Kit</span><span class="tag">Authority Articles</span></div></div>
-        </div>
-      </div>
-
-      <div id="organization" class="page">
-        <div class="grid middle">
-          <div class="card panel snapshot"><h4>Organization Reputation Report™</h4><p>For the company, nonprofit, foundation, or organization connected to the leader.</p></div>
-          <div class="card panel"><h4>Organization Checks</h4><div class="asset"><span>Google Business Profile</span><span class="yes">✓</span><small>Check</small></div><div class="asset"><span>Google Reviews</span><span class="yes">✓</span><small>Track</small></div><div class="asset"><span>Candid / Charity Navigator</span><span class="no">×</span><small>If nonprofit</small></div><div class="asset"><span>Glassdoor / Indeed</span><span class="yes">✓</span><small>Optional</small></div></div>
-          <div class="card panel"><h4>Organization Opportunity</h4><div class="tags"><span class="tag">Trust Page</span><span class="tag">Reviews Plan</span><span class="tag">Press Page</span><span class="tag">Awards Page</span></div></div>
-        </div>
-      </div>
-
-      <div id="rep360" class="page">
-        <div class="card panel"><h4>Reputation 360™</h4><p>Compares the leader and the business or nonprofit they run to see whether both reputations are working together.</p></div>
-        <div class="card metrics" style="margin-top:18px">
-          <div class="metric"><div class="icon">♙</div><div class="value">89</div><small>Leader Visibility</small></div>
-          <div class="metric"><div class="icon">▦</div><div class="value">84</div><small>Organization Trust</small></div>
-          <div class="metric"><div class="icon">∞</div><div class="value">81</div><small>Alignment</small></div>
-          <div class="metric"><div class="icon">♬</div><div class="value">76</div><small>Share of Voice</small></div>
-          <div class="metric"><div class="icon">★</div><div class="value">91</div><small>Credibility</small></div>
-          <div class="metric"><div class="icon">↗</div><div class="value">88</div><small>Opportunity</small></div>
-        </div>
-      </div>
-
-      <div id="assetRecovery" class="page">
-        <div class="card panel"><h4>Asset Recovery™</h4><p>This is the credibility recovery layer. It finds the work the client already earned but never organized or activated.</p></div>
-        <div class="card metrics" style="margin-top:18px">
-          <div class="metric"><div class="icon">▤</div><div class="value">12</div><small>Media Mentions</small></div>
-          <div class="metric"><div class="icon">♬</div><div class="value">18</div><small>Speaking Assets</small></div>
-          <div class="metric"><div class="icon">♕</div><div class="value">7</div><small>Awards</small></div>
-          <div class="metric"><div class="icon">❝</div><div class="value">9</div><small>Quotes</small></div>
-          <div class="metric"><div class="icon">♧</div><div class="value">4</div><small>Board Roles</small></div>
-          <div class="metric"><div class="icon">▣</div><div class="value">50</div><small>Total Assets</small></div>
-        </div>
-        <div class="card panel" style="margin-top:18px"><h4>Invisible Assets</h4><div class="tags"><span class="tag">Event pages not listed</span><span class="tag">Awards missing from bio</span><span class="tag">Podcast mentions</span><span class="tag">Old press quotes</span><span class="tag">Board appointments</span></div></div>
-      </div>
-
-      <div id="socialReviews" class="page">
-        <div class="card panel"><h4>Social Listening + Reviews</h4><p>Reports what people are saying online about the person, organization, or both.</p></div>
-        <div class="grid middle" style="grid-template-columns:1fr 1fr 1fr;margin-top:18px">
-          <div class="card score"><h4>Positive</h4><div class="big" style="margin-top:0">68%</div><small>Credibility and leadership</small></div>
-          <div class="card score"><h4>Neutral</h4><div class="big" style="margin-top:0">27%</div><small>Informational mentions</small></div>
-          <div class="card score"><h4>Negative</h4><div class="big" style="margin-top:0">5%</div><small>Needs monitoring</small></div>
-        </div>
-        <div class="card panel" style="margin-top:18px"><h4>Sources to Monitor</h4><div class="tags"><span class="tag">LinkedIn</span><span class="tag">Instagram</span><span class="tag">Facebook Reviews</span><span class="tag">Google Reviews</span><span class="tag">Glassdoor</span><span class="tag">Indeed</span><span class="tag">Candid</span><span class="tag">Charity Navigator</span></div></div>
-      </div>
-
-      <div id="admin" class="page">
-        <div class="grid bottom">
-          <div class="card quick"><h4>Work Queue</h4><div class="q">Draft Reports <strong>4</strong></div><div class="q">Waiting Review <strong>2</strong></div><div class="q">Published <strong>11</strong></div></div>
-          <div class="card quick"><h4>Admin Actions</h4><div class="q" onclick="showPage('intake')">Add Client <strong>+</strong></div><div class="q" onclick="generateReport()">Generate Report <strong>→</strong></div><div class="q" onclick="toast('Client snapshot published.')">Publish Snapshot <strong>✓</strong></div></div>
-          <div class="card quick"><h4>Research Checklist</h4><div class="q">Knowledge Panel <strong>□</strong></div><div class="q">Wikipedia/Wikidata <strong>□</strong></div><div class="q">Reviews/Social <strong>□</strong></div></div>
-          <div class="card quick"><h4>Portal Mode</h4><div class="q" onclick="setMode('admin')">Admin View <strong>→</strong></div><div class="q" onclick="setMode('client')">Client View <strong>→</strong></div></div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-const defaultReport = {
-  personName: "Stefanie Magness",
-  orgName: "Elevate Visibility Group",
-  title: "Founder & Visibility Consultant",
-  reportType: "Reputation 360™",
-  reputationScore: 89,
-  snapshot: "Stefanie Magness and Elevate Visibility Group have been reviewed across visibility, authority signals, social listening, reviews, Asset Recovery™, and leader-organization alignment.",
-  knownFor: ["Executive Visibility","Reputation Strategy","Public Relations","Thought Leadership","Public Affairs"],
-  opportunities: ["Asset Inventory","Bio Refresh","Media Page","Speaker One-Sheet","Knowledge Panel Pathway"],
-  risks: ["No Google Knowledge Panel detected","No Wikipedia or Wikidata profile found","Speaking history is not fully centralized"]
-};
-
-function qs(s){return document.querySelector(s)}
-function qsa(s){return [...document.querySelectorAll(s)]}
-
-function showPage(id, el){
-  qsa(".page").forEach(p=>p.classList.remove("active"));
-  qs("#"+id).classList.add("active");
-  qsa(".nav a").forEach(a=>a.classList.remove("active"));
-  if(el) el.classList.add("active");
-  window.scrollTo({top:0, behavior:"smooth"});
-}
-
-function setMode(mode){
-  document.body.classList.toggle("client-mode", mode === "client");
-  document.body.classList.toggle("is-admin", mode !== "client");
-  qs("#userRole").textContent = mode === "client" ? "Client Portal" : "EVG Admin";
-  toast(mode === "client" ? "Client view enabled." : "Admin view enabled.");
-}
-
-function scoreRow(label, value){
-  return `<div class="row"><span>${label}</span><div class="bar"><div class="fill" style="width:${value}%"></div></div><strong>${value}</strong></div>`;
-}
-function authority(name, yes, note){
-  return `<div class="asset"><span>${name}</span><span class="${yes?'yes':'no'}">${yes?'✓':'×'}</span><small>${note}</small></div>`;
-}
-function tag(t){return `<span class="tag">${t}</span>`}
-function risk(t, ok=false){return `<div class="risk"><span class="${ok?'ok':'warn'}">${ok?'✓':'⚠'}</span><div>${t}</div></div>`}
-
-function hydrate(r){
-  r = {...defaultReport, ...(r || {})};
-
-  const setText = (id, value) => {
-    const el = qs("#" + id);
-    if(el) el.textContent = value ?? "";
-  };
-
-  const setHTML = (id, value) => {
-    const el = qs("#" + id);
-    if(el) el.innerHTML = value ?? "";
-  };
-
-  const makeInitials = (name) => {
-    return (name || "RR").split(" ").filter(Boolean).map(x => x[0]).join("").slice(0,2).toUpperCase();
-  };
-
-  const personName = r.personName || "";
-  const orgName = r.orgName || "";
-  const title = r.title || "Professional";
-  const googleResults = r.googleResults || r.resultCount || 0;
-  const newsMentions = r.newsMentions || 0;
-  const speakingCount = r.speakingCount || 0;
-  const awardCount = r.awardCount || 0;
-
-  const hasKnowledgePanel = !!(r.hasKnowledgePanel || r.authorityAssets?.googleKnowledgePanel);
-  const hasWikipedia = !!(r.hasWikipedia || r.authorityAssets?.wikipedia);
-
-  // A. Profile Card
-  setText("profileName", personName);
-  setText("profileOrg", orgName || "Independent / Not clearly detected");
-  setText("profileTitle", title);
-  setText("reportTypeBadge", r.reportType || "Reputation 360™");
-  setText("overallScore", r.reputationScore || 78);
-  setText("profileInitials", makeInitials(personName));
-
-  const search = qs("#searchInput");
-  if(search) search.value = personName;
-
-  // B. Reputation Snapshot
-  setText(
-    "snapshotText",
-    r.snapshot ||
-    `${personName} returned ${googleResults} visible Google results. ${
-      hasKnowledgePanel ? "A Google Knowledge Panel was detected." : "No Google Knowledge Panel was detected."
-    } ${
-      hasWikipedia ? "Wikipedia coverage was found." : "No Wikipedia result was found."
-    }`
-  );
-
-  // Live stat row
-  setText("googleResultCount", googleResults);
-  setText("newsMentionCount", newsMentions);
-  setText("mediaReachCount", r.mediaReach || "Review");
-  setText("speakingCount", speakingCount);
-  setText("awardCount", awardCount);
-  setText("socialFollowerCount", r.socialFollowers || "Review");
-
-  // Score Breakdown
-  setHTML("scoreRows",
-    scoreRow("Search Visibility", r.reputationScore || 78)+
-    scoreRow("Media Presence", r.authorityAssets?.mediaMentions ? 82 : 60)+
-    scoreRow("Authority Assets", r.authorityScore || 72)+
-    scoreRow("Asset Recovery", r.assetRecoveryScore || 76)+
-    scoreRow("Social Sentiment", r.socialSentimentScore || 80)+
-    scoreRow("Reputation Clarity", r.reputationScore || 78)
-  );
-
-  // C. Top News/Search Mentions
-  const mentions = Array.isArray(r.topMentions) && r.topMentions.length
-    ? r.topMentions
-    : (Array.isArray(r.recoveredAssets) ? r.recoveredAssets : []);
-
-  const mentionHTML = mentions.length
-    ? mentions.slice(0,5).map(item => {
-        const title = typeof item === "string" ? item : (item.title || "Public result");
-        const source = typeof item === "string" ? "Recovered asset" : (item.source || item.snippet || "Visible public result");
-        const link = typeof item === "string" ? "" : (item.link || "");
-        const titleHTML = link ? `<a href="${link}" target="_blank" rel="noopener">${title}</a>` : title;
-        return `<div class="mention"><b>${titleHTML}</b><br><span>${source}</span><span class="pos">Found</span></div>`;
-      }).join("")
-    : `<div class="mention"><b>No live mentions found</b><br><span>Try adding a city, company, title, or organization name.</span><span class="pos">Review</span></div>`;
-  setHTML("topMentions", mentionHTML);
-
-  // D. What You're Known For
-  const known = (r.knownFor && r.knownFor.length)
-    ? r.knownFor
-    : ["Public Visibility", "Leadership", "Professional Authority"];
-  setHTML("knownFor", known.map(tag).join(""));
-
-  // Recommended Next Moves
-  const nextMoves = (r.opportunities && r.opportunities.length)
-    ? r.opportunities
-    : ["Create a Credibility Asset Inventory™", "Update executive bio", "Strengthen Knowledge Panel pathway"];
-  setHTML("opportunityTags", nextMoves.map(tag).join(""));
-
-  // E. Risk Alerts
-  const risks = (r.risks && r.risks.length)
-    ? r.risks
-    : [
-        !hasKnowledgePanel ? "No Google Knowledge Panel detected" : null,
-        !hasWikipedia ? "No Wikipedia result detected" : null,
-        "No major negative issue detected"
-      ].filter(Boolean);
-
-  setHTML("riskList", risks.map(x => risk(x, String(x).toLowerCase().includes("no major negative"))).join(""));
-
-  // Authority Assets
-  setHTML("authorityAssets",
-    authority("Google Knowledge Panel", !!r.authorityAssets?.googleKnowledgePanel, r.authorityAssets?.googleKnowledgePanel ? "Yes" : "No")+
-    authority("Wikipedia Page", !!r.authorityAssets?.wikipedia, r.authorityAssets?.wikipedia ? "Yes" : "No")+
-    authority("Wikidata Profile", !!r.authorityAssets?.wikidata, r.authorityAssets?.wikidata ? "Yes" : "No")+
-    authority("Official Website", !!r.authorityAssets?.officialWebsite, r.authorityAssets?.officialWebsite ? "Yes" : "No")+
-    authority("LinkedIn Profile", !!r.authorityAssets?.linkedIn, r.authorityAssets?.linkedIn ? "Yes" : "No")+
-    authority("News Coverage", !!r.authorityAssets?.mediaMentions, r.authorityAssets?.mediaMentions ? "Yes" : "No")+
-    authority("Awards & Recognition", !!r.authorityAssets?.awards, r.authorityAssets?.awards ? "Yes" : "No")+
-    authority("Speaking History", !!r.authorityAssets?.speakingHistory, r.authorityAssets?.speakingHistory ? "Yes" : "No")
-  );
-}
-
-async function generateReport(){
-  const person = qs("#searchInput").value || qs("#personName").value || defaultReport.personName;
-  const org = qs("#orgName").value || defaultReport.orgName;
-  const body = {personName:person, orgName:org, reportType:qs("#reportType")?.value || defaultReport.reportType};
-  try{
-    const res = await fetch("/.netlify/functions/report", {method:"POST", body:JSON.stringify(body)});
-    if(res.ok){
-      const report = await res.json();
-      const fullReport = {...defaultReport, ...report, title:qs("#title")?.value || defaultReport.title};
-      localStorage.setItem("rr_current_report", JSON.stringify(fullReport));
-      hydrate(fullReport);
-      toast("Report generated.");
-      showPage("dashboard");
-      return;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Reputation Report™ | EVG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --black:#030303; --white:#fff; --soft:#faf8f7; --line:#ead9d4; --text:#151515; --muted:#7d7370;
+      --rose:#d68173; --rose2:#f4c4b7; --rose3:#b96053; --green:#459563; --red:#b84842; --yellow:#d89b2d;
+      --shadow:0 12px 28px rgba(30,20,18,.09);
     }
-  }catch(e){}
-  const fallback = {
-    ...defaultReport,
-    personName: person,
-    orgName: org,
-    title: qs("#title")?.value || defaultReport.title,
-    snapshot: `${person} has been reviewed across visibility, authority signals, social listening, reviews, Asset Recovery™, and leader-organization alignment.`
-  };
-  localStorage.setItem("rr_current_report", JSON.stringify(fallback));
-  hydrate(fallback);
-  toast("Report generated locally.");
-  showPage("dashboard");
-}
+    *{box-sizing:border-box}
+    body{margin:0;background:#f7f3f1;color:var(--text);font-family:Inter,Arial,sans-serif;font-size:14px}
+    a{color:inherit}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+    .sidebar{background:#020202;color:#fff;border-right:1px solid rgba(244,196,183,.45);position:sticky;top:0;height:100vh;padding:22px 18px;overflow:auto}
+    .logo{text-align:center;padding:10px 20px 26px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .logo img{width:190px;max-width:100%;display:block;margin:0 auto}
+    .nav{margin-top:28px}
+    .nav a{display:flex;align-items:center;gap:14px;color:#fff;text-decoration:none;padding:15px 18px;border-radius:5px;margin:4px 0;font-size:17px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .nav a.active{background:linear-gradient(90deg,#d68173,#f1b2a6);box-shadow:0 10px 22px rgba(214,129,115,.25)}
+    .nav svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.8;fill:none}
+    .promo{margin-top:28px;border:1px solid var(--rose);border-radius:9px;padding:22px 16px;text-align:center;background:#060606}
+    .promo .diamond{font-size:40px;color:var(--rose2);line-height:1}
+    .promo h3{font-family:Playfair Display,serif;color:var(--rose2);font-size:22px;margin:16px 0 12px}
+    .promo p{color:#fff;line-height:1.7;font-weight:700;margin:0}
 
-function saveIntake(){
-  const data = {
-    ...defaultReport,
-    personName: qs("#personName").value,
-    orgName: qs("#orgName").value,
-    title: qs("#title").value,
-    reportType: qs("#reportType").value
-  };
-  localStorage.setItem("rr_current_report", JSON.stringify(data));
-  hydrate(data);
-  toast("Intake saved.");
-}
+    .main{min-width:0}
+    .topbar{height:112px;background:#030303;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:20px 36px;border-bottom:1px solid var(--rose)}
+    .brand h1{font-family:Playfair Display,serif;letter-spacing:8px;font-size:35px;text-transform:uppercase;margin:0;line-height:1}
+    .brand p{letter-spacing:9px;color:var(--rose2);font-weight:800;margin:12px 0 0;font-size:14px}
+    .top-actions{display:flex;align-items:center;gap:18px}
+    .btn{border:none;border-radius:5px;background:var(--rose2);color:#000;font-weight:800;padding:16px 28px}
+    .btn.dark{background:#000;color:#fff}
+    .btn.outline{background:#fff;border:1px solid var(--line);color:#000}
+    .user{display:flex;align-items:center;gap:12px;color:#fff}
+    .avatar{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#7d7370,#3a312f);border:3px solid #fff;color:#fff;font-family:Playfair Display,serif;font-size:25px;font-weight:800}
+    .bell{position:relative;font-size:28px}.badge{position:absolute;top:-8px;right:-8px;background:var(--rose3);color:#fff;border-radius:50%;font-size:12px;padding:4px 7px}
 
-function toast(message){
-  const t = qs("#toast");
-  t.textContent = message;
-  t.style.display = "block";
-  setTimeout(()=>t.style.display="none", 2500);
-}
+    .content{padding:22px 26px 60px}
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:20px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow)}
+    .panel{padding:22px}
+    .search-row{display:grid;grid-template-columns:260px 1fr 280px;gap:14px;align-items:end}
+    label{display:block;font-weight:700;margin-bottom:8px}
+    input,select,textarea{width:100%;border:1px solid #e2c7bf;border-radius:5px;padding:13px 14px;background:#fff}
+    .small-link{color:var(--rose3);font-weight:600;text-decoration:none}
+    .muted{color:var(--muted)}
+    .profile-card{display:grid;grid-template-columns:175px 1fr 250px;gap:28px;align-items:center}
+    .profile-pic{width:148px;height:148px;border-radius:50%;border:4px solid var(--rose2);background:radial-gradient(circle,#8f7a74,#443632);display:flex;align-items:center;justify-content:center;color:#fff;font-size:50px;font-family:Playfair Display,serif;font-weight:800;overflow:hidden}
+    .profile-pic img{width:100%;height:100%;object-fit:cover}
+    h2{font-family:Playfair Display,serif;font-size:36px;margin:0 0 10px}
+    .meta{display:flex;gap:12px;flex-wrap:wrap;color:#5e5653}
+    .pill{display:inline-flex;border:1px solid var(--rose2);color:var(--rose3);background:#fff7f4;border-radius:4px;padding:8px 12px;font-size:12px;text-transform:uppercase;margin-top:14px}
+    .right-stack{display:flex;flex-direction:column;gap:14px}
+    .score-card{text-align:center;padding:26px}
+    .score-label{font-weight:900;text-transform:uppercase;margin-bottom:20px}
+    .gauge{width:160px;height:90px;margin:0 auto 8px;border-top:10px solid #f4ded9;border-left:10px solid #f4ded9;border-right:10px solid #f4ded9;border-radius:160px 160px 0 0;position:relative}
+    .gauge:after{content:"";position:absolute;left:-10px;top:-10px;width:95px;height:90px;border-top:10px solid var(--rose);border-left:10px solid var(--rose);border-radius:160px 0 0 0}
+    .score{font-size:52px}.score small{font-size:15px;color:var(--muted);display:block}
+    .score-caption{color:var(--rose3);font-size:17px}
+    .panel h4{margin:0 0 16px;text-transform:uppercase;font-size:14px}
+    .score-row{display:grid;grid-template-columns:1fr 135px 38px;gap:10px;align-items:center;margin:11px 0;font-size:13px}
+    .bar{height:7px;background:#f1e2dd;border-radius:99px;overflow:hidden}
+    .bar span{display:block;height:100%;background:var(--rose);border-radius:99px}
+    .stats{display:grid;grid-template-columns:repeat(6,1fr);overflow:hidden}
+    .stat{text-align:center;padding:28px 8px;border-right:1px solid var(--line)}
+    .stat:last-child{border-right:none}
+    .stat .ico{font-size:29px;color:var(--rose3);height:32px}
+    .stat b{display:block;font-size:26px;color:var(--rose3);margin:4px 0}.stat span{font-size:12px}
+    .lower{display:grid;grid-template-columns:1.1fr 1.1fr 1.1fr 1fr;gap:20px}
+    .mention{margin:10px 0}.mention b{font-size:13px}.mention span{display:block;font-size:12px;line-height:1.45}.pos{color:var(--green);font-weight:700}
+    .tags{display:flex;flex-wrap:wrap;gap:10px}
+    .tag{border:1px solid var(--rose2);background:#fff7f4;color:var(--rose3);padding:8px 10px;border-radius:4px;font-size:12px}
+    .risk{display:flex;gap:12px;align-items:flex-start;margin:14px 0}.risk .warn{color:var(--yellow);font-weight:900}.risk .ok{color:var(--green);font-weight:900}
+    .quick{display:grid;gap:10px}.quick button{text-align:left;background:#fff;border:1px solid var(--line);border-radius:5px;padding:14px 16px;font-weight:600}
+    .kp-box{display:grid;grid-template-columns:82px 1fr;gap:14px;align-items:start}
+    .kp-image{width:82px;height:82px;border-radius:9px;background:#f3ebe8;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:28px;font-weight:800;color:#6b5b56}
+    .kp-image img{width:100%;height:100%;object-fit:cover}
+    .kp-status{font-weight:900;margin:0 0 8px}
+    .kp-status.good{color:var(--green)}.kp-status.bad{color:var(--red)}
+    .client-form{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:10px;align-items:end;margin-top:16px}
+    .hidden{display:none!important}
+    .notice{padding:12px 14px;background:#fff7f4;border:1px solid var(--rose2);border-radius:5px;color:#7a4a42;margin-top:14px}
+    @media(max-width:1100px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.grid,.profile-card,.lower,.search-row{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.topbar{height:auto;gap:20px;align-items:flex-start;flex-direction:column}.brand h1{font-size:25px}.client-form{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo"><img src="./evg-logo.png" alt="Elevate Visibility Group"></div>
+      <nav class="nav">
+        <a class="active" href="#"><span>▣</span>Dashboard</a>
+        <a href="#clients"><span>☑</span>Clients</a>
+        <a href="#individual"><span>♙</span>Individual</a>
+        <a href="#organization"><span>♜</span>Organization</a>
+        <a href="#reputation360"><span>◎</span>Reputation 360</a>
+        <a href="#asset"><span>◇</span>Asset Recovery</a>
+        <a href="#social"><span>□</span>Social + Reviews</a>
+        <a href="#admin"><span>∘</span>Admin</a>
+      </nav>
+      <div class="promo">
+        <div class="diamond">◇</div>
+        <h3>The Reputation Report™</h3>
+        <p>See what the world sees before the world decides who you are.</p>
+      </div>
+    </aside>
 
-document.addEventListener("DOMContentLoaded", ()=>{
-  const saved = localStorage.getItem("rr_current_report");
-  hydrate(saved ? JSON.parse(saved) : defaultReport);
-});
-</script>
+    <main class="main">
+      <header class="topbar">
+        <div class="brand">
+          <h1>The Reputation Report™</h1>
+          <p>VISIBILITY & REPUTATION INTELLIGENCE PLATFORM</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn" id="newReportBtn">+ New Report</button>
+          <button class="btn" id="exportBtn">Export PDF</button>
+          <div class="bell">♧<span class="badge">3</span></div>
+          <div class="user"><div class="avatar">SM</div><div><b>Stefanie Magness</b><br><small>EVG Admin</small></div></div>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="grid">
+          <div>
+            <div class="card panel">
+              <div class="search-row">
+                <div>
+                  <label>Select client</label>
+                  <select id="clientSelect">
+                    <option value="">Manual search</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Search any person or organization to generate a reputation report</label>
+                  <input id="searchInput" value="Stefanie Magness" placeholder="Enter a person or organization">
+                </div>
+                <button class="btn" id="generateBtn">Generate Report</button>
+              </div>
+
+              <div id="clients" class="notice">
+                <b>Add a client to your dropdown:</b>
+                <div class="client-form">
+                  <input id="clientName" placeholder="Client name">
+                  <input id="clientTitle" placeholder="Title">
+                  <input id="clientOrg" placeholder="Organization">
+                  <input id="clientWebsite" placeholder="Website">
+                  <button class="btn outline" id="addClientBtn">Add Client</button>
+                </div>
+                <small class="muted">Client list saves in this browser for now. Firestore sync can be added next.</small>
+              </div>
+            </div>
+
+            <div class="card panel" style="margin-top:20px">
+              <div class="profile-card">
+                <div class="profile-pic" id="profilePhoto"><span id="profileInitials">SM</span></div>
+                <div>
+                  <h2 id="profileName">Stefanie Magness</h2>
+                  <div class="meta">
+                    <span id="profileTitle">Public Relations Consultant</span>
+                    <span>|</span>
+                    <span id="profileOrg">Elevate Visibility Group</span>
+                  </div>
+                  <div class="meta" style="margin-top:8px">
+                    <span>Visibility & Reputation</span><span>Asset Recovery™</span><span>Reputation 360™</span>
+                  </div>
+                  <span class="pill" id="reportTypeBadge">Reputation 360™</span>
+                </div>
+                <div class="right-stack">
+                  <button class="btn outline">Update Information</button>
+                  <button class="btn dark">View Assets</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid" style="grid-template-columns:1fr 1.65fr;margin-top:20px">
+              <div class="card panel">
+                <h4>Reputation Score Breakdown</h4>
+                <div id="scoreRows"></div>
+              </div>
+              <div class="card panel">
+                <h4>Reputation Snapshot</h4>
+                <p id="snapshotText" style="line-height:1.7;margin:0 0 14px">Run a report to generate a live reputation snapshot.</p>
+                <a href="#analysis" class="small-link">View full analysis →</a>
+              </div>
+            </div>
+          </div>
+
+          <aside>
+            <div class="card panel">
+              <h4>Reports This Month</h4>
+              <div style="font-size:42px;font-weight:500">12</div>
+              <a class="small-link">View all reports →</a>
+            </div>
+            <div class="card score-card" style="margin-top:20px">
+              <div class="score-label">Overall Reputation Score</div>
+              <div class="gauge"></div>
+              <div class="score"><span id="overallScore">89</span><small>/100</small></div>
+              <div class="score-caption">Strong Reputation</div>
+            </div>
+            <div class="card panel" style="margin-top:20px">
+              <h4>Google Knowledge Panel</h4>
+              <div class="kp-box">
+                <div class="kp-image" id="kpImage">KP</div>
+                <div>
+                  <p id="kpStatus" class="kp-status bad">Not Detected</p>
+                  <b id="kpName">No panel found</b>
+                  <p id="kpDescription" class="muted" style="line-height:1.5">Run a report to check Knowledge Panel status.</p>
+                  <a id="kpWebsite" class="small-link hidden" target="_blank" rel="noopener">Official website →</a>
+                </div>
+              </div>
+            </div>
+            <div class="card panel" style="margin-top:20px">
+              <h4>Authority Assets</h4>
+              <div id="authorityAssets"></div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="card stats" style="margin-top:20px">
+          <div class="stat"><div class="ico">⌕</div><b id="googleResultCount">0</b><span>Google Results</span></div>
+          <div class="stat"><div class="ico">▤</div><b id="newsMentionCount">0</b><span>News Mentions</span></div>
+          <div class="stat"><div class="ico">♛</div><b id="mediaReachCount">Review</b><span>Media Reach</span></div>
+          <div class="stat"><div class="ico">♫</div><b id="speakingCount">0</b><span>Speaking Signals</span></div>
+          <div class="stat"><div class="ico">♕</div><b id="awardCount">0</b><span>Awards Signals</span></div>
+          <div class="stat"><div class="ico">♧</div><b id="socialFollowerCount">Review</b><span>Social Followers</span></div>
+        </div>
+
+        <div class="lower" style="margin-top:20px">
+          <div class="card panel">
+            <h4>Top News & Media Mentions</h4>
+            <div id="topMentions"><div class="mention"><b>Run a report</b><br><span>Recent media and search results will appear here.</span><span class="pos">Pending</span></div></div>
+          </div>
+          <div class="card panel">
+            <h4>What You're Known For</h4>
+            <div class="tags" id="knownFor"></div>
+          </div>
+          <div class="card panel">
+            <h4>Recommended Next Moves</h4>
+            <div class="tags" id="opportunityTags"></div>
+          </div>
+          <div class="card panel">
+            <h4>Reputation Risk Alerts</h4>
+            <div id="riskList"></div>
+          </div>
+        </div>
+
+        <div class="card panel" style="margin-top:20px;max-width:380px">
+          <h4>Quick Actions</h4>
+          <div class="quick">
+            <button>Create Asset Inventory ›</button>
+            <button>Reputation 360™ ›</button>
+            <button>Social + Reviews ›</button>
+            <button>Update Information ›</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const qs = s => document.querySelector(s);
+    const defaultReport = {
+      personName:"Stefanie Magness",
+      orgName:"Elevate Visibility Group",
+      title:"Public Relations Consultant",
+      reputationScore:89,
+      googleResults:0,
+      newsMentions:0,
+      knownFor:["Executive Visibility","Reputation Strategy","Public Relations"],
+      opportunities:["Create a Credibility Asset Inventory™","Update executive bio","Build media and awards page"],
+      risks:["Run a live report to check reputation risks"],
+      authorityAssets:{}
+    };
+
+    function tag(t){return `<span class="tag">${escapeHTML(t)}</span>`}
+    function risk(t, ok=false){return `<div class="risk"><span class="${ok?'ok':'warn'}">${ok?'✓':'⚠'}</span><div>${escapeHTML(t)}</div></div>`}
+    function scoreRow(name,val){return `<div class="score-row"><span>${escapeHTML(name)}</span><div class="bar"><span style="width:${Number(val)||0}%"></span></div><b>${Number(val)||0}</b></div>`}
+    function authority(name, yes, note){return `<div class="risk"><span class="${yes?'ok':'warn'}">${yes?'✓':'×'}</span><div>${escapeHTML(name)} <small class="muted">${escapeHTML(note||"")}</small></div></div>`}
+    function escapeHTML(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    function hydrate(r){
+      r = {...defaultReport, ...(r || {})};
+
+      const setText = (id, value) => { const el = qs("#" + id); if(el) el.textContent = value ?? ""; };
+      const setHTML = (id, value) => { const el = qs("#" + id); if(el) el.innerHTML = value ?? ""; };
+
+      const personName = r.personName || "";
+      const orgName = r.orgName || "";
+      const title = r.title || "Professional";
+      const googleResults = r.googleResults || 0;
+      const newsMentions = r.newsMentions || 0;
+      const speakingCount = r.speakingCount || 0;
+      const awardCount = r.awardCount || 0;
+      const kp = r.knowledgePanel || {};
+      const hasKnowledgePanel = !!(r.hasKnowledgePanel || r.authorityAssets?.googleKnowledgePanel);
+
+      const initials = (personName || "RR").split(" ").filter(Boolean).map(x=>x[0]).join("").slice(0,2).toUpperCase();
+
+      setText("profileName", personName);
+      setText("profileOrg", orgName || "Independent / Not clearly detected");
+      setText("profileTitle", title);
+      setText("overallScore", r.reputationScore || 78);
+      setText("profileInitials", initials);
+      setText("reportTypeBadge", r.reportType || "Reputation 360™");
+
+      const photoBox = qs("#profilePhoto");
+      if(photoBox){
+        if(kp.image){
+          photoBox.innerHTML = `<img src="${kp.image}" alt="${escapeHTML(personName)}">`;
+        } else {
+          photoBox.innerHTML = `<span id="profileInitials">${initials}</span>`;
+        }
+      }
+
+      setText("snapshotText", r.snapshot || `${personName} returned ${googleResults} Google results and ${newsMentions} news results.`);
+
+      setText("googleResultCount", googleResults);
+      setText("newsMentionCount", newsMentions);
+      setText("mediaReachCount", r.mediaReach || "Review");
+      setText("speakingCount", speakingCount);
+      setText("awardCount", awardCount);
+      setText("socialFollowerCount", r.socialFollowers || "Review");
+
+      setHTML("scoreRows",
+        scoreRow("Search Visibility", r.reputationScore || 78)+
+        scoreRow("Media Presence", r.authorityAssets?.mediaMentions ? 82 : 60)+
+        scoreRow("Authority Assets", r.authorityScore || 72)+
+        scoreRow("Asset Recovery", r.assetRecoveryScore || 70)+
+        scoreRow("Social Sentiment", r.socialSentimentScore || 70)+
+        scoreRow("Reputation Clarity", r.reputationScore || 78)
+      );
+
+      const mentions = Array.isArray(r.topMentions) ? r.topMentions : [];
+      setHTML("topMentions", mentions.length ? mentions.slice(0,8).map(item => {
+        const titleHTML = item.link ? `<a href="${item.link}" target="_blank" rel="noopener">${escapeHTML(item.title)}</a>` : escapeHTML(item.title);
+        return `<div class="mention"><b>${titleHTML}</b><br><span>${escapeHTML(item.source || item.snippet || "Public result")}</span><span class="pos">Found</span></div>`;
+      }).join("") : `<div class="mention"><b>No recent media found</b><br><span>Try adding a city, company, or title to the search.</span><span class="pos">Review</span></div>`);
+
+      setHTML("knownFor", (r.knownFor || []).map(tag).join(""));
+      setHTML("opportunityTags", (r.opportunities || []).map(tag).join(""));
+      setHTML("riskList", (r.risks || []).map(x => risk(x, String(x).toLowerCase().includes("no major negative"))).join(""));
+
+      const kpStatus = qs("#kpStatus");
+      if(kpStatus){
+        kpStatus.textContent = hasKnowledgePanel ? "Detected" : "Not Detected";
+        kpStatus.className = "kp-status " + (hasKnowledgePanel ? "good" : "bad");
+      }
+      setText("kpName", kp.title || personName || "No panel found");
+      setText("kpDescription", kp.description || (hasKnowledgePanel ? "Knowledge Panel data was detected." : "No Google Knowledge Panel was detected for this search."));
+
+      const kpImage = qs("#kpImage");
+      if(kpImage){
+        kpImage.innerHTML = kp.image ? `<img src="${kp.image}" alt="${escapeHTML(personName)}">` : initials;
+      }
+
+      const kpWebsite = qs("#kpWebsite");
+      if(kpWebsite){
+        if(kp.website){
+          kpWebsite.href = kp.website;
+          kpWebsite.classList.remove("hidden");
+        } else {
+          kpWebsite.classList.add("hidden");
+        }
+      }
+
+      setHTML("authorityAssets",
+        authority("Google Knowledge Panel", !!r.authorityAssets?.googleKnowledgePanel, r.authorityAssets?.googleKnowledgePanel ? "Yes" : "No")+
+        authority("Wikipedia Page", !!r.authorityAssets?.wikipedia, r.authorityAssets?.wikipedia ? "Yes" : "No")+
+        authority("Wikidata Profile", !!r.authorityAssets?.wikidata, r.authorityAssets?.wikidata ? "Yes" : "No")+
+        authority("Official Website", !!r.authorityAssets?.officialWebsite, r.authorityAssets?.officialWebsite ? "Yes" : "No")+
+        authority("LinkedIn Profile", !!r.authorityAssets?.linkedIn, r.authorityAssets?.linkedIn ? "Yes" : "No")+
+        authority("News Coverage", !!r.authorityAssets?.mediaMentions, r.authorityAssets?.mediaMentions ? "Yes" : "No")+
+        authority("Awards & Recognition", !!r.authorityAssets?.awards, r.authorityAssets?.awards ? "Yes" : "No")+
+        authority("Speaking History", !!r.authorityAssets?.speakingHistory, r.authorityAssets?.speakingHistory ? "Yes" : "No")
+      );
+    }
+
+    async function generateReport(){
+      const personName = qs("#searchInput").value.trim();
+      if(!personName){ alert("Enter a name first."); return; }
+      qs("#generateBtn").textContent = "Searching...";
+      qs("#generateBtn").disabled = true;
+
+      try{
+        const client = getSelectedClient();
+        const response = await fetch("/.netlify/functions/report", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({
+            personName,
+            orgName: client?.org || "",
+            title: client?.title || "",
+            website: client?.website || ""
+          })
+        });
+        const data = await response.json();
+        if(!response.ok) throw new Error(data.error || "Report failed");
+        hydrate(data);
+      }catch(e){
+        alert("Report error: " + e.message);
+      }finally{
+        qs("#generateBtn").textContent = "Generate Report";
+        qs("#generateBtn").disabled = false;
+      }
+    }
+
+    function getClients(){
+      try{return JSON.parse(localStorage.getItem("rr_clients") || "[]")}catch(e){return []}
+    }
+    function saveClients(clients){localStorage.setItem("rr_clients", JSON.stringify(clients))}
+    function renderClients(){
+      const select = qs("#clientSelect");
+      const clients = getClients();
+      select.innerHTML = `<option value="">Manual search</option>` + clients.map((c,i)=>`<option value="${i}">${escapeHTML(c.name)}${c.org ? " | " + escapeHTML(c.org) : ""}</option>`).join("");
+    }
+    function getSelectedClient(){
+      const idx = qs("#clientSelect").value;
+      if(idx === "") return null;
+      return getClients()[Number(idx)] || null;
+    }
+    function addClient(){
+      const name = qs("#clientName").value.trim();
+      if(!name){alert("Enter a client name.");return}
+      const client = {
+        name,
+        title: qs("#clientTitle").value.trim(),
+        org: qs("#clientOrg").value.trim(),
+        website: qs("#clientWebsite").value.trim()
+      };
+      const clients = getClients();
+      clients.push(client);
+      saveClients(clients);
+      renderClients();
+      qs("#clientSelect").value = String(clients.length-1);
+      qs("#searchInput").value = client.name;
+      ["clientName","clientTitle","clientOrg","clientWebsite"].forEach(id=>qs("#"+id).value="");
+    }
+
+    qs("#generateBtn").addEventListener("click", generateReport);
+    qs("#addClientBtn").addEventListener("click", addClient);
+    qs("#clientSelect").addEventListener("change", () => {
+      const c = getSelectedClient();
+      if(c){
+        qs("#searchInput").value = c.name;
+        hydrate({
+          personName:c.name,
+          orgName:c.org,
+          title:c.title,
+          snapshot:`${c.name} is selected. Click Generate Report to pull live reputation data.`
+        });
+      }
+    });
+    qs("#newReportBtn").addEventListener("click", () => { qs("#searchInput").focus(); qs("#searchInput").select(); });
+    qs("#exportBtn").addEventListener("click", () => window.print());
+
+    renderClients();
+    hydrate(defaultReport);
+  </script>
 </body>
 </html>
