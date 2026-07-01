@@ -1,0 +1,15 @@
+{
+  "name": "reputation-report-complete-v2",
+  "version": "2.0.0",
+  "description": "The Reputation Report™ v2 by Elevate Visibility Group",
+  "scripts": {
+    "build": "echo 'Static build complete'",
+    "start": "npx netlify dev"
+  },
+  "dependencies": {
+    "@netlify/functions": "^3.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
+  }
+}
