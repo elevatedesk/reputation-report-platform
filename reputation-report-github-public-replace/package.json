@@ -1,0 +1,15 @@
+{
+  "name": "reputation-report-v2-final-536pm",
+  "version": "2.0.0",
+  "description": "The Reputation Report™ v2 final 5:36 PM build by Elevate Visibility Group",
+  "scripts": {
+    "build": "echo 'Build complete'",
+    "start": "npx netlify dev"
+  },
+  "dependencies": {
+    "@netlify/functions": "^3.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
+  }
+}
