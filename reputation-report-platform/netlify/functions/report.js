@@ -67,10 +67,13 @@ exports.handler = async function(event) {
     const organic = keepExactPersonResults(organicRaw);
     const newsResults = keepExactPersonResults(newsRaw);
 
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 3;
+
     const awardQueries = [
-      `"${person}" award`,
-      `"${person}" awards`,
-      `"${person}" recognition`,
+      `"${person}" award ${startYear}..${currentYear}`,
+      `"${person}" awards ${startYear}..${currentYear}`,
+      `"${person}" recognition ${startYear}..${currentYear}`,
       `"${person}" "40 under 40"`,
       `"${person}" "Most Admired CEO"`,
       `"${person}" "Top 100"`,
@@ -86,7 +89,7 @@ exports.handler = async function(event) {
     ];
 
     const speakingQueries = [
-      `"${person}" speaker`,
+      `"${person}" speaker ${startYear}..${currentYear}`,
       `"${person}" keynote`,
       `"${person}" conference`,
       `"${person}" podcast`,
@@ -101,9 +104,7 @@ exports.handler = async function(event) {
           const data = await serp({ engine: "google", q, num: String(limitPerQuery) });
           const exact = keepExactPersonResults(data.organic_results || []);
           collected.push(...exact.map(r => normalizeResult(r, "Google Search")));
-        } catch (e) {
-          // Keep going. One failed search should not kill the report.
-        }
+        } catch (e) {}
       }
       return collected;
     }
@@ -130,7 +131,7 @@ exports.handler = async function(event) {
 
     const awardsFound = dedupeByLink(awardResults).filter(item => {
       const t = `${item.title} ${item.snippet} ${item.source}`.toLowerCase();
-      return /award|honor|recognition|winner|named|ranking|ranked|40 under 40|top 100|most admired|women to watch|top women|power list|best/.test(t);
+      return /award|honor|recognition|winner|named|ranking|ranked|40 under 40|top 100|most admired|women to watch|top women|power list|best|qwoted|clutch|designrush|manifest|daily record/.test(t);
     });
 
     const speakingFound = dedupeByLink(speakingResults).filter(item => {
@@ -143,15 +144,6 @@ exports.handler = async function(event) {
     const hasWikidata = links.some(x => x.includes("wikidata.org"));
     const hasLinkedIn = links.some(x => x.includes("linkedin.com"));
     const hasKnowledgePanel = !!kg;
-
-    const allText = [
-      ...mediaMentions.map(r => `${r.title} ${r.snippet}`),
-      ...awardsFound.map(r => `${r.title} ${r.snippet}`),
-      ...speakingFound.map(r => `${r.title} ${r.snippet}`),
-      kg?.title || "",
-      kg?.type || "",
-      kg?.description || ""
-    ].join(" ").toLowerCase();
 
     const knownSources = [
       kg?.title || "",
@@ -232,6 +224,80 @@ exports.handler = async function(event) {
 
     const snapshot = `${person}${detectedOrg ? " and " + detectedOrg : ""} returned ${organic.length} exact-name Google search results, ${newsResults.length} recent Google News results, ${awardsFound.length} award or recognition signals, and ${speakingFound.length} speaking or interview signals. ${hasKnowledgePanel ? "A Google Knowledge Panel was detected." : "No Google Knowledge Panel was detected."} ${hasWikipedia ? "A Wikipedia result was found." : "No Wikipedia result was found."}`;
 
+    async function generateAIAnalysis(context) {
+      const openaiKey = process.env.OPENAI_API_KEY;
+      if (!openaiKey) {
+        return null;
+      }
+
+      const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+      const prompt = `
+You are an executive reputation intelligence analyst for a PR and visibility advisory firm.
+Write concise, boardroom-ready analysis based only on the data provided. Do not invent facts. If evidence is weak, say so clearly.
+Return valid JSON only with these keys:
+executiveBrief, reputationNarrative, googleEntityAnalysis, awardsSummary, mediaSummary, speakingSummary, actionPlan, timeline, visibilityGrade, gradeHeadline, gradeSummary.
+
+Style: polished, direct, human, executive-level. No hype. No em dashes.
+
+DATA:
+${JSON.stringify(context, null, 2)}
+`;
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openaiKey}`
+          },
+          body: JSON.stringify({
+            model,
+            temperature: 0.3,
+            messages: [
+              { role: "system", content: "You write factual executive reputation intelligence reports in JSON." },
+              { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" }
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          return { executiveBrief: `AI analysis was not generated because the OpenAI request failed: ${data.error?.message || response.status}` };
+        }
+
+        const content = data.choices?.[0]?.message?.content || "{}";
+        return JSON.parse(content);
+      } catch (e) {
+        return { executiveBrief: `AI analysis was not generated: ${e.message}` };
+      }
+    }
+
+    const aiAnalysis = await generateAIAnalysis({
+      personName: person,
+      title: detectedTitle,
+      organization: detectedOrg,
+      snapshot,
+      score,
+      googleResults: organic.length,
+      newsMentions: newsResults.length,
+      awardSignals: awardsFound.length,
+      speakingSignals: speakingFound.length,
+      hasKnowledgePanel,
+      hasWikipedia,
+      hasWikidata,
+      hasLinkedIn,
+      knowledgePanel,
+      knownFor,
+      topMentions,
+      awardsFound,
+      speakingFound,
+      risks,
+      opportunities,
+      reviewedPeriod: `roughly the last 3 years where search results are available`
+    });
+
     const report = {
       personName: person,
       orgName: detectedOrg,
@@ -268,7 +334,8 @@ exports.handler = async function(event) {
         speakingHistory: speakingFound.length > 0
       },
       risks,
-      opportunities
+      opportunities,
+      aiAnalysis
     };
 
     return {

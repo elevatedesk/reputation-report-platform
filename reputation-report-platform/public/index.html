@@ -465,12 +465,18 @@
     }
 
 
+
     function sourceItems(items, emptyText){
       if(!items || !items.length) return `<div class="source-item"><b>${escapeHTML(emptyText)}</b><span>No exact-name source was found in this category during this search.</span></div>`;
       return items.slice(0,6).map(item => {
         const titleHTML = item.link ? `<a href="${item.link}" target="_blank" rel="noopener">${escapeHTML(item.title)}</a>` : escapeHTML(item.title);
         return `<div class="source-item">${titleHTML}<span>${escapeHTML(item.source || item.snippet || "Public source")}</span></div>`;
       }).join("");
+    }
+
+    function paragraphize(text){
+      if(!text) return "";
+      return String(text).split(/\n+/).filter(Boolean).map(p => `<p>${escapeHTML(p)}</p>`).join("");
     }
 
     function hydrateAISections(r){
@@ -489,45 +495,54 @@
       const awards = Array.isArray(r.awardResults) ? r.awardResults : [];
       const speaking = Array.isArray(r.speakingResults) ? r.speakingResults : [];
       const mentions = Array.isArray(r.topMentions) ? r.topMentions : [];
-      const grade = (r.reputationScore || 0) >= 90 ? "A" : (r.reputationScore || 0) >= 82 ? "B+" : (r.reputationScore || 0) >= 75 ? "B" : "C";
+      const ai = r.aiAnalysis || {};
+      const grade = ai.visibilityGrade || ((r.reputationScore || 0) >= 90 ? "A" : (r.reputationScore || 0) >= 82 ? "B+" : (r.reputationScore || 0) >= 75 ? "B" : "C");
       const profileLabel = `${title}${orgName ? " at " + orgName : ""}`;
 
-      setHTML("executiveBrief", `
+      setHTML("executiveBrief", ai.executiveBrief ? paragraphize(ai.executiveBrief) : `
         <p><b>${escapeHTML(personName)}</b> is currently presented online as ${escapeHTML(profileLabel)}. The report reviewed live search results, recent media, authority assets, awards, speaking signals, and Google entity signals.</p>
         <p>Over the reviewed search footprint, ${escapeHTML(personName)} returned ${googleResults} exact-name Google results, ${newsMentions} recent news results, ${awardCount} award or recognition signals, and ${speakingCount} speaking or interview signals.</p>
         <p>${hasKnowledgePanel ? "A Google Knowledge Panel was detected, which suggests Google has enough entity confidence to display a structured public profile." : "A Google Knowledge Panel was not detected, which means there is an opportunity to strengthen structured authority signals and public entity consistency."}</p>
       `);
 
       setText("visibilityGrade", grade);
-      setText("gradeHeadline", `${personName} has a ${grade} executive visibility profile`);
-      setText("gradeSummary", `${hasKnowledgePanel ? "Strong entity recognition." : "Entity recognition needs strengthening."} ${awardCount ? "Awards were found." : "Awards should be documented more clearly."} ${newsMentions ? "Recent media visibility was found." : "Recent media visibility should be increased."}`);
+      setText("gradeHeadline", ai.gradeHeadline || `${personName} has a ${grade} executive visibility profile`);
+      setText("gradeSummary", ai.gradeSummary || `${hasKnowledgePanel ? "Strong entity recognition." : "Entity recognition needs strengthening."} ${awardCount ? "Awards were found." : "Awards should be documented more clearly."} ${newsMentions ? "Recent media visibility was found." : "Recent media visibility should be increased."}`);
 
-      setHTML("reputationNarrative", `
+      setHTML("reputationNarrative", ai.reputationNarrative ? paragraphize(ai.reputationNarrative) : `
         <p>If someone searched ${escapeHTML(personName)} today, they would likely see a public identity shaped by ${escapeHTML((r.knownFor || []).slice(0,4).join(", ") || "professional visibility and online authority")}.</p>
         <p>The strongest credibility signals are ${hasKnowledgePanel ? "Google entity recognition" : "search visibility"}, ${newsMentions ? "recent media visibility" : "available public search results"}, ${awardCount ? "award and recognition signals" : "opportunity to make awards more visible"}, and ${speakingCount ? "speaking or interview signals" : "opportunity to document speaking history"}.</p>
       `);
 
-      setHTML("entityAnalysis", `
+      setHTML("entityAnalysis", ai.googleEntityAnalysis ? paragraphize(ai.googleEntityAnalysis) : `
         <p>${hasKnowledgePanel ? "Google appears to understand this person as a distinct public entity." : "Google does not appear to display a Knowledge Panel for this exact search."}</p>
         <p>${hasWiki ? "A Wikipedia result was found, which can strengthen public entity recognition." : "No Wikipedia result was found. A Wikidata or Wikipedia pathway may be worth exploring only if eligibility is strong."}</p>
         <p>Entity confidence is supported by exact-name search results, consistent titles, media references, official websites, social profiles, and trusted third-party mentions.</p>
       `);
 
-      setHTML("awardsIntelligence", sourceItems(awards, "No verified awards found yet"));
-      setHTML("mediaIntelligence", sourceItems(mentions, "No media mentions found yet"));
-      setHTML("speakingIntelligence", sourceItems(speaking, "No speaking or interview signals found yet"));
+      setHTML("awardsIntelligence", ai.awardsSummary ? paragraphize(ai.awardsSummary) + sourceItems(awards, "No verified awards found yet") : sourceItems(awards, "No verified awards found yet"));
+      setHTML("mediaIntelligence", ai.mediaSummary ? paragraphize(ai.mediaSummary) + sourceItems(mentions, "No media mentions found yet") : sourceItems(mentions, "No media mentions found yet"));
+      setHTML("speakingIntelligence", ai.speakingSummary ? paragraphize(ai.speakingSummary) + sourceItems(speaking, "No speaking or interview signals found yet") : sourceItems(speaking, "No speaking or interview signals found yet"));
 
-      setHTML("actionPlan", `
-        <div class="brief-item"><b>30 Days</b><span>Clean up public bios, confirm titles, centralize the strongest media and recognition links, and update the client asset inventory.</span></div>
-        <div class="brief-item"><b>90 Days</b><span>Pursue fresh interviews, podcast appearances, award submissions, and third-party profiles tied to the person's strongest authority lane.</span></div>
-        <div class="brief-item"><b>365 Days</b><span>Build a durable authority system with ongoing media, speaking, awards, entity signals, and a Knowledge Panel or Wikidata pathway where appropriate.</span></div>
-      `);
+      if(ai.actionPlan){
+        setHTML("actionPlan", paragraphize(ai.actionPlan));
+      } else {
+        setHTML("actionPlan", `
+          <div class="brief-item"><b>30 Days</b><span>Clean up public bios, confirm titles, centralize the strongest media and recognition links, and update the client asset inventory.</span></div>
+          <div class="brief-item"><b>90 Days</b><span>Pursue fresh interviews, podcast appearances, award submissions, and third-party profiles tied to the person's strongest authority lane.</span></div>
+          <div class="brief-item"><b>365 Days</b><span>Build a durable authority system with ongoing media, speaking, awards, entity signals, and a Knowledge Panel or Wikidata pathway where appropriate.</span></div>
+        `);
+      }
 
-      const timelineItems = [];
-      awards.slice(0,3).forEach(x => timelineItems.push({year:"Awards", text:x.title}));
-      mentions.slice(0,4).forEach(x => timelineItems.push({year:"Media", text:x.title}));
-      speaking.slice(0,3).forEach(x => timelineItems.push({year:"Speaking", text:x.title}));
-      setHTML("visibilityTimeline", timelineItems.length ? timelineItems.slice(0,8).map(x => `<div class="timeline-item"><b>${escapeHTML(x.year)}</b><span>${escapeHTML(x.text)}</span></div>`).join("") : `<div class="timeline-item"><b>Pending</b><span>No timeline items found yet. Add more client details or run a broader search.</span></div>`);
+      if(ai.timeline){
+        setHTML("visibilityTimeline", paragraphize(ai.timeline));
+      } else {
+        const timelineItems = [];
+        awards.slice(0,3).forEach(x => timelineItems.push({year:"Awards", text:x.title}));
+        mentions.slice(0,4).forEach(x => timelineItems.push({year:"Media", text:x.title}));
+        speaking.slice(0,3).forEach(x => timelineItems.push({year:"Speaking", text:x.title}));
+        setHTML("visibilityTimeline", timelineItems.length ? timelineItems.slice(0,8).map(x => `<div class="timeline-item"><b>${escapeHTML(x.year)}</b><span>${escapeHTML(x.text)}</span></div>`).join("") : `<div class="timeline-item"><b>Pending</b><span>No timeline items found yet. Add more client details or run a broader search.</span></div>`);
+      }
     }
 
     function getClients(){
