@@ -172,6 +172,7 @@ button,a,.q{cursor:pointer}
         <div class="grid bottom" style="margin-top:18px">
           <div class="card panel"><h4>Top News Mentions</h4><div class="newsitem"><div class="pub">EVG</div><div><strong>Visibility Strategies Every Leader Needs</strong><br><small>Positive</small></div></div></div>
           <div class="card panel"><h4>What You're Known For</h4><div class="tags" id="knownFor"></div></div>
+          <div class="card panel"><h4>Recommended Next Moves</h4><div class="tags" id="opportunityTags"></div></div>
           <div class="card panel"><h4>Reputation Risk Alerts</h4><div id="riskList"></div></div>
           <div class="card quick"><h4>Quick Actions</h4><div class="q" onclick="showPage('assetRecovery')">Create Asset Inventory <strong>›</strong></div><div class="q" onclick="showPage('rep360')">Reputation 360™ <strong>›</strong></div><div class="q" onclick="showPage('socialReviews')">Social + Reviews <strong>›</strong></div><div class="q" onclick="showPage('intake')">Update Information <strong>›</strong></div></div>
         </div>
@@ -301,24 +302,47 @@ function tag(t){return `<span class="tag">${t}</span>`}
 function risk(t, ok=false){return `<div class="risk"><span class="${ok?'ok':'warn'}">${ok?'✓':'⚠'}</span><div>${t}</div></div>`}
 
 function hydrate(r){
-  qs("#profileName").textContent = r.personName;
-  qs("#profileOrg").textContent = r.orgName;
-  qs("#profileTitle").textContent = r.title || defaultReport.title;
-  qs("#reportTypeBadge").textContent = r.reportType || defaultReport.reportType;
-  qs("#overallScore").textContent = r.reputationScore || 89;
-  qs("#snapshotText").textContent = r.snapshot || defaultReport.snapshot;
-  qs("#searchInput").value = r.personName || defaultReport.personName;
-  qs("#knownFor").innerHTML = (r.knownFor || defaultReport.knownFor).map(tag).join("");
-  qs("#opportunityTags").innerHTML = (r.opportunities || defaultReport.opportunities).map(tag).join("");
-  qs("#riskList").innerHTML = (r.risks || defaultReport.risks).map(x=>risk(x)).join("") + risk("No major negative issue detected", true);
-  qs("#scoreRows").innerHTML =
+  r = {...defaultReport, ...(r || {})};
+
+  const setText = (id, value) => {
+    const el = qs("#" + id);
+    if(el) el.textContent = value ?? "";
+  };
+
+  const setHTML = (id, value) => {
+    const el = qs("#" + id);
+    if(el) el.innerHTML = value ?? "";
+  };
+
+  const makeInitials = (name) => {
+    return (name || "RR").split(" ").filter(Boolean).map(x => x[0]).join("").slice(0,2).toUpperCase();
+  };
+
+  setText("profileName", r.personName || defaultReport.personName);
+  setText("profileOrg", r.orgName || defaultReport.orgName);
+  setText("profileTitle", r.title || defaultReport.title);
+  setText("reportTypeBadge", r.reportType || defaultReport.reportType);
+  setText("overallScore", r.reputationScore || 89);
+  setText("snapshotText", r.snapshot || `${r.personName || defaultReport.personName} has been reviewed across visibility, authority signals, social listening, reviews, Asset Recovery™, and leader-organization alignment.`);
+  setText("profileInitials", makeInitials(r.personName || defaultReport.personName));
+
+  const search = qs("#searchInput");
+  if(search) search.value = r.personName || defaultReport.personName;
+
+  setHTML("knownFor", (r.knownFor || defaultReport.knownFor).map(tag).join(""));
+  setHTML("opportunityTags", (r.opportunities || defaultReport.opportunities).map(tag).join(""));
+  setHTML("riskList", (r.risks || defaultReport.risks).map(x=>risk(x)).join("") + risk("No major negative issue detected", true));
+
+  setHTML("scoreRows",
     scoreRow("Search Visibility",89)+
     scoreRow("Media Presence",82)+
     scoreRow("Authority Assets",74)+
     scoreRow("Asset Recovery",76)+
     scoreRow("Social Sentiment",91)+
-    scoreRow("Reputation Clarity",88);
-  qs("#authorityAssets").innerHTML =
+    scoreRow("Reputation Clarity",88)
+  );
+
+  setHTML("authorityAssets",
     authority("Google Knowledge Panel",false,"No")+
     authority("Wikipedia Page",false,"No")+
     authority("Wikidata Profile",false,"No")+
@@ -326,7 +350,8 @@ function hydrate(r){
     authority("LinkedIn Profile",true,"Yes")+
     authority("News Coverage",true,"Yes")+
     authority("Awards & Recognition",true,"Yes")+
-    authority("Speaking History",true,"Partial");
+    authority("Speaking History",true,"Partial")
+  );
 }
 
 async function generateReport(){
@@ -345,7 +370,13 @@ async function generateReport(){
       return;
     }
   }catch(e){}
-  const fallback = {...defaultReport, personName:person, orgName:org, title:qs("#title")?.value || defaultReport.title};
+  const fallback = {
+    ...defaultReport,
+    personName: person,
+    orgName: org,
+    title: qs("#title")?.value || defaultReport.title,
+    snapshot: `${person} has been reviewed across visibility, authority signals, social listening, reviews, Asset Recovery™, and leader-organization alignment.`
+  };
   localStorage.setItem("rr_current_report", JSON.stringify(fallback));
   hydrate(fallback);
   toast("Report generated locally.");
