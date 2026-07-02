@@ -28,7 +28,7 @@
     <nav id="nav"></nav>
     <div class="promo">
       <h3>The Reputation Report™</h3>
-      <p>See what the world sees before the world decides who you are.</p>
+      <p>Built for many clients, not just one report.</p>
     </div>
   </aside>
 
@@ -39,6 +39,7 @@
         <p id="modeLabel">Admin Workspace</p>
       </div>
       <div class="top-actions">
+        <button class="primary admin-only" data-page-link="clients">Clients</button>
         <button class="primary admin-only" data-action="new-report">+ New Report</button>
         <button class="primary" data-action="export-pdf">Export PDF</button>
         <button class="outline" data-action="switch-entry">Switch View</button>
@@ -49,20 +50,22 @@
     <section id="dashboard" class="page active">
       <div class="grid top-grid admin-only">
         <div class="card search-card">
-          <label>Generate report by name and LinkedIn URL</label>
+          <label>Generate report for selected client</label>
           <div class="search-stack">
-            <input id="nameInput" value="Stefanie Magness" placeholder="Full name">
+            <select id="activeClientSelect"></select>
+            <button class="outline" data-page-link="clients">Manage Clients</button>
+            <input id="nameInput" placeholder="Full name">
             <input id="linkedinInput" placeholder="LinkedIn URL required">
             <input id="orgInput" placeholder="Optional organization">
             <input id="websiteInput" placeholder="Optional website">
             <button class="primary" data-action="generate-report">GENERATE REPORT</button>
           </div>
-          <p class="muted">LinkedIn is used to help confirm the right person. The old Identity Match popup has been removed.</p>
+          <p class="muted">Reports, assets, notes, and history are saved under the selected client.</p>
         </div>
         <div class="card report-count">
-          <h4>Reports This Month</h4>
-          <div id="reportCount">0</div>
-          <button class="linkbtn" data-page-link="reports">View report history →</button>
+          <h4>Active Clients</h4>
+          <div id="clientCount">0</div>
+          <button class="linkbtn" data-page-link="clients">Open client list →</button>
         </div>
       </div>
 
@@ -70,20 +73,21 @@
         <div class="card profile">
           <div class="headshot" id="profileInitials">SM</div>
           <div>
-            <h2 id="profileName">Stefanie Magness</h2>
-            <p><span id="profileTitle">Founder & Visibility Consultant</span> | <span id="profileOrg">Elevate Visibility Group</span></p>
-            <span class="badge" id="reportType">Reputation 360™</span>
-            <span class="badge" id="confidenceBadge">Confidence: 98%</span>
+            <h2 id="profileName">No client selected</h2>
+            <p><span id="profileTitle">Select a client</span> | <span id="profileOrg">Client Workspace</span></p>
+            <span class="badge" id="reportType">No Report</span>
+            <span class="badge" id="confidenceBadge">Confidence: 0%</span>
+            <span class="badge" id="statusBadge">Status: Draft</span>
           </div>
           <div class="actions admin-only">
-            <button class="outline" data-page-link="intake">UPDATE INFORMATION</button>
+            <button class="outline" data-page-link="intake">UPDATE CLIENT</button>
             <button class="dark" data-page-link="assets">ADD ASSET</button>
           </div>
         </div>
         <div class="card score-card">
           <h4>Overall Reputation Score</h4>
           <div class="gauge"></div>
-          <div class="score-num" id="overallScore">89</div>
+          <div class="score-num" id="overallScore">0</div>
           <small>/100</small>
           <strong>Working Score</strong>
         </div>
@@ -110,7 +114,7 @@
       <div class="grid bottom-grid">
         <div class="card panel">
           <h4>Top News + Media Mentions</h4>
-          <p class="muted">Last 12 months only. Must mention the searched person or organization.</p>
+          <p class="muted">Third-party articles, profiles, expert mentions, and publication features. Last 12 months only when available.</p>
           <div id="mediaList"></div>
         </div>
         <div class="card panel">
@@ -127,15 +131,15 @@
           <button data-page-link="assetRecovery">Create Asset Inventory <span>›</span></button>
           <button data-page-link="rep360">Reputation 360™ <span>›</span></button>
           <button data-page-link="social">Social + Reviews <span>›</span></button>
-          <button data-page-link="intake">Update Information <span>›</span></button>
+          <button data-page-link="intake">Update Client <span>›</span></button>
           <button data-page-link="assets">Add Authority Asset <span>+</span></button>
           <button data-page-link="bio">Bio Development <span>›</span></button>
         </div>
       </div>
     </section>
 
-    <section id="reports" class="page"></section>
     <section id="clients" class="page admin-only"></section>
+    <section id="reports" class="page"></section>
     <section id="intake" class="page admin-only"></section>
     <section id="rep360" class="page"></section>
     <section id="assetRecovery" class="page admin-only"></section>

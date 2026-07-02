@@ -1,6 +1,6 @@
-# The Reputation Report™ Working Static Root Build
+# The Reputation Report™ Multi-Client Admin Build
 
-Upload the contents of this folder directly into the root of the GitHub repository.
+Upload the contents of this folder directly to the GitHub repository root.
 
 Root should show:
 - index.html
@@ -8,42 +8,27 @@ Root should show:
 - app.js
 - netlify.toml
 - assets/
+- netlify/functions/research.js
 - README.md
 
-Netlify:
-- No npm needed
-- No React build needed
-- Publish directory: .
+Netlify settings:
 - Build command: leave blank
+- Publish directory: .
+- Functions directory: netlify/functions
 
-Included working features:
-- Identity Match Review™
-- Search by name, LinkedIn URL, website, or organization
-- Select identity before report updates
-- Dynamic initials, name, summary, score, Known For
-- Clickable dashboard metrics
-- Drawers for Google, News, Media Reach, Speaking, Awards, Reviews/Social, Bio Score, AI Recommendations
-- Quick Actions
-- Intake form
-- Admin Portal
-- Client Portal
-- Manual Asset Manager
-- Add, edit, delete assets
-- Mark Verified / Client Submitted / AI Found buttons
-- Remove irrelevant items
-- Restore removed items
-- Bio Development™
-- Bio Completeness Score
-- Bio Checklist
-- Bio Suggestions
-- Bio Builder formats
-- Speaking Intelligence
-- Timeline of Influence™
-- Export PDF via browser print
-- Browser localStorage for reports, assets, and bio checklist
+Required environment variable:
+- SERPAPI_API_KEY
 
-Next phase:
-- Connect Firebase Auth
-- Connect Firestore
-- Connect live Google/news/Wikipedia/Wikidata/API research
-- Connect AI analysis
+What changed:
+- The system now supports many clients.
+- Admin starts from Clients.
+- Add, select, delete, and manage clients.
+- Each client has separate reports, assets, bio checklist, notes, and status.
+- Generate Report saves the report under the selected client.
+- Status tracking: Draft, Researching, Needs Review, Ready, Delivered, Monitoring, Error.
+- Client view only shows the selected client's dashboard, reports, bio, assets, timeline, and uploads.
+- News/media is stricter: third-party media only.
+- Awards/recognition is stricter: best-of lists, top lists, rankings, trailblazers, honorees, and formal recognition.
+
+Important:
+This version still uses browser localStorage for the client database. That means it is good for testing and demos, but not production. The next production step is Firebase Auth + Firestore so clients and reports are saved securely across devices.

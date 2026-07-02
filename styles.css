@@ -87,9 +87,9 @@ nav button.active{background:linear-gradient(90deg,#cc7767,#f1b7a9);box-shadow:0
 .drawer-head{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #eadbd7;padding-bottom:16px;margin-bottom:18px}
 .drawer h2{font-family:Playfair Display,serif;font-size:30px;margin:0}
 .drawer-close{border:0;background:#050505;color:#fff;border-radius:4px;padding:10px 14px;font-weight:800}
-.detail-item{border:1px solid #eadbd7;border-radius:8px;padding:14px;margin:10px 0;background:#fff}
-.detail-item strong{display:block;margin-bottom:5px}
-.detail-item small{color:#7d7370;line-height:1.5}
+.detail-item{border:1px solid #eadbd7;border-radius:8px;padding:14px;margin:10px 0;background:#fff;white-space:pre-wrap}
+.detail-item strong{display:block;margin-bottom:5px;white-space:normal}
+.detail-item small{color:#7d7370;line-height:1.5;white-space:pre-wrap}
 .remove-btn{border:0;background:#fff1ee;color:#b84842;border-radius:4px;padding:7px 10px;font-weight:800;margin-top:10px}
 .verify-btn{border:0;background:#edf7ef;color:#4f9563;border-radius:4px;padding:7px 10px;font-weight:800;margin-top:10px;margin-right:6px}
 .bio-checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
@@ -102,6 +102,12 @@ nav button.active{background:linear-gradient(90deg,#cc7767,#f1b7a9);box-shadow:0
 .timeline-item{border-left:4px solid var(--rose);padding:10px 0 10px 15px;margin:12px 0;background:#fff}
 .toast{position:fixed;right:22px;bottom:22px;background:#050505;color:#fff;border-left:4px solid var(--rose);padding:16px 18px;border-radius:8px;display:none;z-index:120}
 .toast.show{display:block}
+.client-table{width:100%;border-collapse:collapse}
+.client-table th,.client-table td{border-bottom:1px solid #eadbd7;text-align:left;padding:12px;vertical-align:top}
+.client-table th{font-size:12px;text-transform:uppercase;color:#8d625a}
+.status{display:inline-block;border-radius:100px;padding:6px 10px;font-size:12px;font-weight:800;background:#fff3ef;color:#b96053}
+.client-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.client-toolbar input,.client-toolbar select{border:1px solid #dfc4bc;border-radius:6px;padding:10px;width:min(280px,100%)}
 body.client-mode .admin-only{display:none!important}
 body.admin-mode .client-only{display:none!important}
 @media(max-width:1250px){.metrics{grid-template-columns:repeat(4,1fr)}.top-grid,.profile-grid,.middle-grid,.bottom-grid{grid-template-columns:1fr}.profile{grid-template-columns:1fr;text-align:center}.headshot{margin:auto}}

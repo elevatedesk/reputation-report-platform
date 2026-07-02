@@ -22,21 +22,17 @@ const AWARD_TERMS = [
   "best agency", "best pr", "women-owned", "black business", "business list", "award"
 ];
 
-const AWARD_SOURCE_HINTS = [
-  "clutch.co", "designrush.com", "themanifest.com", "thedailyrecord.com", "dailyrecord.com",
-  "bizjournals.com", "forbes.com", "inc.com", "entrepreneur.com", "fortune.com",
-  "fastcompany.com", "blackenterprise.com", "essence.com", "ebony.com",
-  "prdaily.com", "ragan.com", "prweek.com", "adweek.com"
-];
-
 const MEDIA_TERMS = [
   "article", "interview", "profile", "spotlight", "feature", "featured", "quoted",
   "expert commentary", "commentary", "according to", "said", "told", "news",
   "magazine", "newspaper", "podcast", "q&a", "conversation", "press"
 ];
 
-const SELF_AUTHORED_TERMS = [
-  "by " // handled carefully below
+const AWARD_SOURCE_HINTS = [
+  "clutch.co", "designrush.com", "themanifest.com", "thedailyrecord.com", "dailyrecord.com",
+  "bizjournals.com", "forbes.com", "inc.com", "entrepreneur.com", "fortune.com",
+  "fastcompany.com", "blackenterprise.com", "essence.com", "ebony.com",
+  "prdaily.com", "ragan.com", "prweek.com", "adweek.com"
 ];
 
 function clean(items = [], limit = 10) {
@@ -78,14 +74,7 @@ function unique(items) {
 
 function appearsSelfAuthored(r, name) {
   const text = textOf(r);
-  const nameParts = name.toLowerCase().split(/\s+/).filter(Boolean);
-  const lastName = nameParts[nameParts.length - 1] || "";
-  const firstName = nameParts[0] || "";
-
-  // Blocks obvious "by [person]" results when the person appears to be the author.
-  const byFull = `by ${name.toLowerCase()}`;
-  const byFirstLast = firstName && lastName ? `by ${firstName} ${lastName}` : "";
-  return text.includes(byFull) || (byFirstLast && text.includes(byFirstLast));
+  return text.includes(`by ${name.toLowerCase()}`);
 }
 
 function filterThirdPartyMedia(items, name) {
@@ -93,16 +82,10 @@ function filterThirdPartyMedia(items, name) {
     .filter(r => {
       if (isBlocked(r)) return false;
       if (appearsSelfAuthored(r, name)) return false;
-
       const text = textOf(r);
-
-      // Block rankings/awards from media. Those belong in awards.
       if (hasAny(text, AWARD_TERMS)) return false;
-
-      // Must look like a media item or article.
       const mediaLanguage = hasAny(text, MEDIA_TERMS);
-      const likelyArticleDomain = /\.(com|org|net)$/i.test(domainOf(r.link)) && !domainOf(r.link).includes("linkedin");
-      return mediaLanguage || likelyArticleDomain;
+      return mediaLanguage;
     })
     .slice(0, 6);
 }
@@ -111,21 +94,13 @@ function filterAwardsOnly(items) {
   return unique(items)
     .filter(r => {
       if (isBlocked(r)) return false;
-
       const text = textOf(r);
       const domain = domainOf(r.link);
-
       const awardLanguage = hasAny(text, AWARD_TERMS);
       const recognizedSource = AWARD_SOURCE_HINTS.some(src => domain.includes(src) || text.includes(src));
-
-      // Must have ranking/recognition language. Articles without that wording are blocked.
-      if (!awardLanguage) return false;
-
-      // Keep recognized platforms, or anything that clearly uses award/ranking language.
       const strongAwardPattern =
         /\b(best of|top\s?\d+|top\s?\d{2}|top\s?\d{3}|ranked|ranking|most admired|most influential|trailblazer|honoree|winner|finalist|40 under 40|30 under 30|50 under 50|women to watch|leading women|best in|top in|named to|named one of)\b/i.test(text);
-
-      return recognizedSource || strongAwardPattern;
+      return awardLanguage && (recognizedSource || strongAwardPattern);
     })
     .slice(0, 10);
 }
@@ -239,23 +214,14 @@ exports.handler = async function(event) {
     const [webRaw, linkedinRaw, newsRaw, mediaRaw, speakingRaw, awardsRaw, awardsPlatformRaw] = await Promise.all([
       serp({ engine:"google", q:`"${name}" ${orgPart} ${websitePart}`, num:10, hl:"en", gl:"us" }),
       serp({ engine:"google", q:`"${name}" "${linkedin}"`, num:10, hl:"en", gl:"us" }),
-
-      // Media should be third-party articles/mentions, not social or self-authored.
       serp({ engine:"google_news", q:`"${name}" ${orgPart}`, hl:"en", gl:"us" }),
       serp({ engine:"google", q:`"${name}" ${orgPart} (article OR interview OR profile OR spotlight OR featured OR quoted OR "expert commentary" OR podcast OR magazine OR newspaper) -site:facebook.com -site:instagram.com -site:tiktok.com -site:youtube.com -site:linkedin.com`, num:10, hl:"en", gl:"us", tbs:"qdr:y" }),
-
-      // Speaking.
       serp({ engine:"google", q:`"${name}" ${orgPart} (speaker OR keynote OR panel OR conference OR summit OR forum OR webinar OR workshop OR podcast OR lecture)`, num:10, hl:"en", gl:"us" }),
-
-      // Awards and recognition only.
       serp({ engine:"google", q:`"${name}" ${orgPart} ("best of" OR "top 10" OR "top 15" OR "top 20" OR "top 50" OR ranked OR ranking OR "most admired" OR trailblazer OR "leading women" OR honoree OR winner OR finalist OR "40 under 40" OR "women to watch" OR "best in" OR "top in") -review -reviews -testimonial -facebook -instagram`, num:10, hl:"en", gl:"us" }),
-
-      // Known recognition platforms.
       serp({ engine:"google", q:`"${name}" ${orgPart} (site:clutch.co OR site:designrush.com OR site:themanifest.com OR site:thedailyrecord.com OR site:bizjournals.com OR site:forbes.com OR site:inc.com OR site:blackenterprise.com OR site:essence.com OR site:ebony.com) ("top" OR "best" OR ranked OR recognition OR award OR honoree OR trailblazer)`, num:10, hl:"en", gl:"us" })
     ]);
 
     const webResults = clean([...(linkedinRaw.organic_results || []), ...(webRaw.organic_results || [])], 12);
-
     const rawMedia = clean([...(newsRaw.news_results || []), ...(mediaRaw.organic_results || [])], 20);
     const rawAwards = clean([...(awardsRaw.organic_results || []), ...(awardsPlatformRaw.organic_results || [])], 20);
 
