@@ -1,6 +1,32 @@
 
 const SERPAPI_ENDPOINT = "https://serpapi.com/search.json";
 
+const AWARD_SOURCES = [
+  "clutch.co", "designrush.com", "themanifest.com", "dailyrecord.com", "thedailyrecord.com",
+  "bizjournals.com", "forbes.com", "inc.com", "entrepreneur.com", "fortune.com",
+  "fastcompany.com", "prnews.io", "prdaily.com", "ragan.com", "campaignlive.com",
+  "blackenterprise.com", "essence.com", "ebony.com", "adweek.com", "prweek.com"
+];
+
+const AWARD_TERMS = [
+  "award", "awards", "recognition", "recognized", "honoree", "honored", "named",
+  "ranked", "ranking", "top", "best", "leading", "leader", "leaders", "trailblazer",
+  "trailblazers", "most admired", "most influential", "women to watch", "40 under 40",
+  "50 under 50", "30 under 30", "power list", "notable", "list", "winner", "finalist",
+  "nominee", "women-owned", "black business", "business list"
+];
+
+const MEDIA_TERMS = [
+  "article", "interview", "profile", "spotlight", "feature", "featured", "quoted",
+  "media mention", "podcast", "magazine", "newspaper", "press", "news", "story",
+  "column", "guest column", "q&a", "conversation"
+];
+
+const BLOCK_SOCIAL = [
+  "facebook.com", "instagram.com", "threads.net", "tiktok.com", "x.com", "twitter.com",
+  "youtube.com", "pinterest.com"
+];
+
 function clean(items = [], limit = 10) {
   return items.slice(0, limit).map(item => ({
     title: item.title || item.name || "Untitled result",
@@ -9,6 +35,59 @@ function clean(items = [], limit = 10) {
     snippet: item.snippet || item.description || item.date || "",
     date: item.date || item.published_date || ""
   }));
+}
+
+function textOf(r) {
+  return `${r.title || ""} ${r.snippet || ""} ${r.source || ""} ${r.link || ""}`.toLowerCase();
+}
+
+function domainOf(link = "") {
+  return link.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
+}
+
+function isBlockedSocial(r) {
+  const t = textOf(r);
+  return BLOCK_SOCIAL.some(d => t.includes(d));
+}
+
+function hasAny(text, words) {
+  return words.some(w => text.includes(w.toLowerCase()));
+}
+
+function unique(items) {
+  const seen = new Set();
+  return items.filter(item => {
+    const key = `${item.title}|${item.link}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function filterAwards(items) {
+  return unique(items)
+    .filter(r => {
+      if (isBlockedSocial(r)) return false;
+      const text = textOf(r);
+      const domain = domainOf(r.link);
+      const sourceAllowed = AWARD_SOURCES.some(src => domain.includes(src) || text.includes(src));
+      const awardLanguage = hasAny(text, AWARD_TERMS);
+      const looksLikeList = /\b(top|best|leading|notable|most admired|most influential|trailblazer|40 under 40|50 under 50|30 under 30)\b/i.test(text);
+      return awardLanguage && (sourceAllowed || looksLikeList);
+    })
+    .slice(0, 10);
+}
+
+function filterMedia(items) {
+  return unique(items)
+    .filter(r => {
+      if (isBlockedSocial(r)) return false;
+      const text = textOf(r);
+      const awardOnly = hasAny(text, ["top pr firm", "top firms", "ranked", "ranking", "award", "awards", "honoree", "winner", "finalist"]);
+      const mediaLanguage = hasAny(text, MEDIA_TERMS);
+      return mediaLanguage && !awardOnly;
+    })
+    .slice(0, 6);
 }
 
 async function serp(params) {
@@ -57,16 +136,16 @@ function findItems(results, keywords, limit = 4) {
   const words = keywords.map(w => w.toLowerCase());
   const seen = new Set();
   return results.filter(r => {
-    const text = `${r.title} ${r.snippet} ${r.source}`.toLowerCase();
+    const text = textOf(r);
     const hit = words.some(w => text.includes(w));
-    if (!hit || seen.has(r.title)) return false;
+    if (!hit || seen.has(r.title) || isBlockedSocial(r)) return false;
     seen.add(r.title);
     return true;
   }).slice(0, limit);
 }
 
 function sourceName(r) {
-  return r.source || (r.link || "").replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] || "source";
+  return r.source || domainOf(r.link) || "source";
 }
 
 function bullets(items, fallback) {
@@ -85,18 +164,7 @@ function buildPersonLookupSummary({ name, organization, webResults, newsResults,
     ? knownFor.map(x => `• ${x}`).join("\n")
     : "• Reputation\n• Visibility\n• Authority building";
 
-  const recognitions = [
-    ...findItems(all, ["qwoted", "award", "recognized", "ranked", "top", "daily record", "designrush", "clutch", "honored"], 5),
-    ...awardResults.slice(0, 3)
-  ].filter((item, index, arr) => arr.findIndex(x => x.title === item.title) === index).slice(0, 5);
-
-  const media = [
-    ...newsResults.slice(0, 4),
-    ...findItems(all, ["featured", "interview", "article", "magazine", "podcast", "quoted", "profile"], 4)
-  ].filter((item, index, arr) => arr.findIndex(x => x.title === item.title) === index).slice(0, 5);
-
   const education = findItems(all, ["master", "bachelor", "degree", "university", "college", "education", "alumni"], 4);
-  const speaking = speakingResults.slice(0, 4);
 
   const identityNotes = [];
   if (checks.linkedin) identityNotes.push("LinkedIn profile found and used as the primary identity anchor.");
@@ -113,13 +181,13 @@ function buildPersonLookupSummary({ name, organization, webResults, newsResults,
     expertise,
     "",
     "Notable Recognition",
-    bullets(recognitions, "• No verified recognition was pulled yet. Add awards, rankings, press features, Qwoted mentions, business recognition, and client-submitted achievements."),
+    bullets(awardResults, "• No verified third-party recognition was pulled yet. Add awards, rankings, recognitions, Qwoted mentions, business lists, and client-submitted achievements."),
     "",
     "Media Visibility",
-    bullets(media, "• No verified media visibility was pulled yet. Add articles, interviews, podcasts, quotes, and publication mentions."),
+    bullets(newsResults, "• No verified media visibility was pulled yet. Add articles, interviews, podcasts, quotes, spotlights, and publication mentions."),
     "",
     "Speaking and Authority Signals",
-    bullets(speaking, "• No verified speaking activity was pulled yet. Add conferences, summits, panels, keynotes, webinars, podcasts, and lectures."),
+    bullets(speakingResults, "• No verified speaking activity was pulled yet. Add conferences, summits, panels, keynotes, webinars, podcasts, and lectures."),
     "",
     "Education and Background",
     bullets(education, "• Education was not clearly identified in this scan. Add degrees, schools, certifications, fellowships, and executive education if known."),
@@ -157,21 +225,35 @@ exports.handler = async function(event) {
       return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ok:false, error:"LinkedIn URL is required to confirm the right person." }) };
     }
 
-    const exactQuery = `"${name}" "${linkedin}"`;
-    const expandedQuery = `"${name}" ${organization ? `"${organization}"` : ""} ${website ? `"${website}"` : ""}`.trim();
+    const orgPart = organization ? `"${organization}"` : "";
+    const expandedQuery = `"${name}" ${orgPart} ${website ? `"${website}"` : ""}`.trim();
 
-    const [webRaw, linkedinRaw, newsRaw, speakingRaw, awardsRaw] = await Promise.all([
+    const [webRaw, linkedinRaw, newsRaw, mediaRaw, speakingRaw, awardsRaw, awardsPlatformRaw] = await Promise.all([
       serp({ engine:"google", q:expandedQuery || `"${name}"`, num:10, hl:"en", gl:"us" }),
-      serp({ engine:"google", q:exactQuery, num:10, hl:"en", gl:"us" }),
-      serp({ engine:"google_news", q:`"${name}" ${organization ? `"${organization}"` : ""}`, hl:"en", gl:"us" }),
-      serp({ engine:"google", q:`"${name}" ${organization ? `"${organization}"` : ""} (speaker OR keynote OR panel OR conference OR summit OR forum OR webinar OR workshop OR podcast OR lecture)`, num:10, hl:"en", gl:"us" }),
-      serp({ engine:"google", q:`"${name}" ${organization ? `"${organization}"` : ""} (award OR recognition OR honored OR named OR ranking OR 40 under 40 OR women to watch OR top OR Qwoted)`, num:10, hl:"en", gl:"us" })
+      serp({ engine:"google", q:`"${name}" "${linkedin}"`, num:10, hl:"en", gl:"us" }),
+
+      // Last 12 months news and media-style search.
+      serp({ engine:"google_news", q:`"${name}" ${orgPart}`, hl:"en", gl:"us" }),
+      serp({ engine:"google", q:`"${name}" ${orgPart} (article OR interview OR profile OR spotlight OR featured OR quote OR podcast OR magazine OR newspaper)`, num:10, hl:"en", gl:"us", tbs:"qdr:y" }),
+
+      // Speaking.
+      serp({ engine:"google", q:`"${name}" ${orgPart} (speaker OR keynote OR panel OR conference OR summit OR forum OR webinar OR workshop OR podcast OR lecture)`, num:10, hl:"en", gl:"us" }),
+
+      // Recognition only.
+      serp({ engine:"google", q:`"${name}" ${orgPart} (award OR awards OR recognition OR recognized OR honored OR honoree OR finalist OR winner OR ranked OR top OR best OR leading OR trailblazer OR "40 under 40" OR "50 under 50" OR "women to watch" OR "most admired" OR "most influential")`, num:10, hl:"en", gl:"us" }),
+
+      // Third-party platform recognition search.
+      serp({ engine:"google", q:`"${name}" ${orgPart} (site:clutch.co OR site:designrush.com OR site:themanifest.com OR site:thedailyrecord.com OR site:bizjournals.com OR site:forbes.com OR site:inc.com OR site:blackenterprise.com OR site:essence.com OR site:ebony.com)`, num:10, hl:"en", gl:"us" })
     ]);
 
     const webResults = clean([...(linkedinRaw.organic_results || []), ...(webRaw.organic_results || [])], 12);
-    const newsResults = clean(newsRaw.news_results || [], 10);
-    const speakingResults = clean(speakingRaw.organic_results || [], 10);
-    const awardResults = clean(awardsRaw.organic_results || [], 10);
+    const rawNews = clean([...(newsRaw.news_results || []), ...(mediaRaw.organic_results || [])], 16);
+    const rawAwards = clean([...(awardsRaw.organic_results || []), ...(awardsPlatformRaw.organic_results || [])], 20);
+
+    const newsResults = filterMedia(rawNews);
+    const awardResults = filterAwards(rawAwards);
+    const speakingResults = clean(speakingRaw.organic_results || [], 10).filter(r => !isBlockedSocial(r)).slice(0, 10);
+
     const allResults = [...webResults, ...newsResults, ...speakingResults, ...awardResults];
     const knownFor = knownForFrom(allResults);
 
