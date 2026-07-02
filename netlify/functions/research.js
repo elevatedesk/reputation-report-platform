@@ -29,44 +29,44 @@ async function serp(params) {
 function knownForFrom(results) {
   const text = results.map(r => `${r.title} ${r.snippet}`).join(" ").toLowerCase();
   const map = [
-    ["public relations", "Public Relations"],
-    ["reputation", "Reputation Strategy"],
-    ["visibility", "Visibility"],
-    ["media", "Media Visibility"],
+    ["public relations", "Public relations"],
+    ["personal branding", "Personal branding"],
+    ["reputation", "Reputation management"],
+    ["visibility", "Media visibility"],
+    ["media", "Media visibility"],
     ["speaker", "Speaking"],
-    ["keynote", "Keynote Speaking"],
-    ["award", "Awards & Recognition"],
+    ["keynote", "Keynote speaking"],
+    ["award", "Awards and recognition"],
     ["author", "Author"],
     ["founder", "Founder"],
-    ["ceo", "Executive Leadership"],
-    ["nonprofit", "Nonprofit Leadership"],
-    ["political", "Public Affairs"],
-    ["entrepreneur", "Entrepreneurship"],
-    ["women", "Women in Leadership"],
-    ["communications", "Communications"],
-    ["consultant", "Consulting"],
-    ["personal branding", "Personal Branding"]
+    ["ceo", "Executive leadership"],
+    ["nonprofit", "Nonprofit leadership"],
+    ["political", "Political visibility"],
+    ["communications", "Communications strategy"],
+    ["consultant", "Consulting"]
   ];
 
   const found = [];
   for (const [term, label] of map) {
     if (text.includes(term) && !found.includes(label)) found.push(label);
   }
-  return found.length ? found.slice(0, 6) : ["Public Profile", "Professional Reputation", "Authority Building"];
+  return found.length ? found.slice(0, 6) : ["Professional reputation", "Visibility", "Authority building"];
 }
 
-function pickEvidence(results, words, limit = 3) {
-  const lowerWords = words.map(w => w.toLowerCase());
-  return results
-    .filter(r => {
-      const t = `${r.title} ${r.snippet} ${r.source}`.toLowerCase();
-      return lowerWords.some(w => t.includes(w));
-    })
-    .slice(0, limit);
+function findItems(results, keywords, limit = 4) {
+  const words = keywords.map(w => w.toLowerCase());
+  const seen = new Set();
+  return results.filter(r => {
+    const text = `${r.title} ${r.snippet} ${r.source}`.toLowerCase();
+    const hit = words.some(w => text.includes(w));
+    if (!hit || seen.has(r.title)) return false;
+    seen.add(r.title);
+    return true;
+  }).slice(0, limit);
 }
 
 function sourceName(r) {
-  return r.source || (r.link || "").replace(/^https?:\/\//, "").split("/")[0] || "source";
+  return r.source || (r.link || "").replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] || "source";
 }
 
 function bullets(items, fallback) {
@@ -74,69 +74,71 @@ function bullets(items, fallback) {
   return items.map(r => `• ${r.title} (${sourceName(r)})`).join("\n");
 }
 
-function uniqueByTitle(items) {
-  const seen = new Set();
-  return items.filter(x => {
-    if (seen.has(x.title)) return false;
-    seen.add(x.title);
-    return true;
-  });
-}
-
-function buildCopilotSummary({ name, organization, webResults, newsResults, speakingResults, awardResults, knownFor, checks }) {
+function buildPersonLookupSummary({ name, organization, webResults, newsResults, speakingResults, awardResults, knownFor, checks }) {
   const all = [...webResults, ...newsResults, ...speakingResults, ...awardResults];
 
-  const achievementSignals = uniqueByTitle([
-    ...pickEvidence(all, ["award", "recognized", "honored", "ranked", "top", "qwoted", "daily record", "designrush", "clutch"], 6),
-    ...awardResults.slice(0, 5)
-  ]).slice(0, 5);
+  const roleLine = organization
+    ? `${name} is a public-facing professional connected to ${organization}.`
+    : `${name} is a public-facing professional with visible online reputation signals.`;
 
-  const mediaSignals = uniqueByTitle([
+  const expertise = knownFor.length
+    ? knownFor.map(x => `• ${x}`).join("\n")
+    : "• Reputation\n• Visibility\n• Authority building";
+
+  const recognitions = [
+    ...findItems(all, ["qwoted", "award", "recognized", "ranked", "top", "daily record", "designrush", "clutch", "honored"], 5),
+    ...awardResults.slice(0, 3)
+  ].filter((item, index, arr) => arr.findIndex(x => x.title === item.title) === index).slice(0, 5);
+
+  const media = [
     ...newsResults.slice(0, 4),
-    ...pickEvidence(all, ["interview", "featured", "article", "magazine", "podcast", "quoted"], 5)
-  ]).slice(0, 5);
+    ...findItems(all, ["featured", "interview", "article", "magazine", "podcast", "quoted", "profile"], 4)
+  ].filter((item, index, arr) => arr.findIndex(x => x.title === item.title) === index).slice(0, 5);
 
-  const educationSignals = pickEvidence(all, ["university", "degree", "bachelor", "master", "education", "college", "alumni"], 4);
-  const speakingSignals = speakingResults.slice(0, 5);
+  const education = findItems(all, ["master", "bachelor", "degree", "university", "college", "education", "alumni"], 4);
+  const speaking = speakingResults.slice(0, 4);
 
-  const headline = `${name} appears to be a public-facing professional connected to ${knownFor.join(", ")}${organization ? ` and ${organization}` : ""}. The submitted LinkedIn URL is being used as the primary identity signal so the report focuses on the correct person, not just anyone with a similar name.`;
-
-  const coreTakeaway = `${name}'s strongest reputation signals appear to be ${knownFor.slice(0, 4).join(", ")}. The profile becomes stronger when verified media mentions, recognitions, speaking activity, education, and leadership assets are added to the report and connected back to the same LinkedIn identity.`;
+  const identityNotes = [];
+  if (checks.linkedin) identityNotes.push("LinkedIn profile found and used as the primary identity anchor.");
+  if (checks.knowledgePanel) identityNotes.push("Google Knowledge Panel signal detected.");
+  if (checks.wikipedia) identityNotes.push("Wikipedia signal detected.");
+  if (checks.wikidata) identityNotes.push("Wikidata signal detected.");
+  if (!identityNotes.length) identityNotes.push("Authority identity signals should be manually verified.");
 
   return [
-    headline,
+    `Who ${name} Is`,
+    `${roleLine} Based on the available search signals, ${name} is most strongly associated with ${knownFor.join(", ")}. The submitted LinkedIn URL should be treated as the main identity anchor so the report does not mix this person with people who have similar names.`,
     "",
-    "Core Takeaway",
-    coreTakeaway,
+    "Key Areas of Expertise",
+    expertise,
     "",
-    "Notable Achievements",
-    bullets(achievementSignals, "• No verified achievements were pulled yet. Add awards, rankings, recognitions, press features, and client-submitted accomplishments to strengthen this section."),
+    "Notable Recognition",
+    bullets(recognitions, "• No verified recognition was pulled yet. Add awards, rankings, press features, Qwoted mentions, business recognition, and client-submitted achievements."),
     "",
-    "Media + Public Visibility",
-    bullets(mediaSignals, "• No verified recent media signals were pulled yet. Add articles, interviews, podcasts, quotes, and press mentions that mention the person or organization."),
+    "Media Visibility",
+    bullets(media, "• No verified media visibility was pulled yet. Add articles, interviews, podcasts, quotes, and publication mentions."),
     "",
-    "Speaking + Authority Signals",
-    bullets(speakingSignals, "• No verified speaking signals were pulled yet. Add conferences, panels, keynotes, summits, webinars, podcasts, and university lectures."),
+    "Speaking and Authority Signals",
+    bullets(speaking, "• No verified speaking activity was pulled yet. Add conferences, summits, panels, keynotes, webinars, podcasts, and lectures."),
     "",
-    "Education + Background",
-    bullets(educationSignals, "• Education background was not clearly identified from this first scan. Add degrees, universities, certifications, fellowships, and executive education manually if known."),
+    "Education and Background",
+    bullets(education, "• Education was not clearly identified in this scan. Add degrees, schools, certifications, fellowships, and executive education if known."),
     "",
-    "Identity Review",
-    "Because this report uses the submitted name and LinkedIn URL, the LinkedIn profile should remain the primary identity anchor. If search results show similar names, those items should be reviewed before they are added to the final report.",
+    "Identity Check",
+    identityNotes.map(x => `• ${x}`).join("\n"),
     "",
-    "Recommended Next Steps",
-    "• Verify LinkedIn profile and official website.\n• Confirm Knowledge Panel, Wikipedia, and Wikidata status.\n• Add missing awards, speaking engagements, media mentions, board roles, publications, and signature projects.\n• Remove unrelated results connected to people with similar names.\n• Use verified findings to improve the executive bio and final Reputation 360 report."
+    "Bottom Line",
+    `${name}'s profile should be positioned around ${knownFor.slice(0, 4).join(", ")}. The next step is to verify the strongest results, remove unrelated items, and use the confirmed assets to strengthen the final bio, Reputation 360 report, and visibility strategy.`
   ].join("\n");
 }
 
 function buildKnownForSummary(name, knownFor, checks) {
   const proof = [];
-  if (checks.linkedin) proof.push("LinkedIn profile");
-  if (checks.knowledgePanel) proof.push("Google Knowledge Panel signal");
-  if (checks.wikipedia) proof.push("Wikipedia signal");
-  if (checks.wikidata) proof.push("Wikidata signal");
-  const proofText = proof.length ? ` Current authority signals include ${proof.join(", ")}.` : " Authority signals still need verification.";
-  return `${name} is currently showing reputation signals around ${knownFor.join(", ")}.${proofText} This should be reviewed like an intelligence snapshot, not a final biography, until each item is verified.`;
+  if (checks.linkedin) proof.push("LinkedIn");
+  if (checks.knowledgePanel) proof.push("Google Knowledge Panel");
+  if (checks.wikipedia) proof.push("Wikipedia");
+  if (checks.wikidata) proof.push("Wikidata");
+  return `${name} appears connected to ${knownFor.join(", ")}. ${proof.length ? "Authority signals found: " + proof.join(", ") + "." : "Authority signals still need manual verification."}`;
 }
 
 exports.handler = async function(event) {
@@ -163,7 +165,7 @@ exports.handler = async function(event) {
       serp({ engine:"google", q:exactQuery, num:10, hl:"en", gl:"us" }),
       serp({ engine:"google_news", q:`"${name}" ${organization ? `"${organization}"` : ""}`, hl:"en", gl:"us" }),
       serp({ engine:"google", q:`"${name}" ${organization ? `"${organization}"` : ""} (speaker OR keynote OR panel OR conference OR summit OR forum OR webinar OR workshop OR podcast OR lecture)`, num:10, hl:"en", gl:"us" }),
-      serp({ engine:"google", q:`"${name}" ${organization ? `"${organization}"` : ""} (award OR recognition OR honored OR named OR ranking OR 40 under 40 OR women to watch OR top)`, num:10, hl:"en", gl:"us" })
+      serp({ engine:"google", q:`"${name}" ${organization ? `"${organization}"` : ""} (award OR recognition OR honored OR named OR ranking OR 40 under 40 OR women to watch OR top OR Qwoted)`, num:10, hl:"en", gl:"us" })
     ]);
 
     const webResults = clean([...(linkedinRaw.organic_results || []), ...(webRaw.organic_results || [])], 12);
@@ -184,7 +186,7 @@ exports.handler = async function(event) {
 
     const confidence = Math.min(98, 55 + (linkedinMatch ? 20 : 0) + Math.min(webResults.length * 2, 16) + Math.min(newsResults.length * 2, 10) + Math.min(speakingResults.length * 2, 8) + Math.min(awardResults.length * 2, 8));
 
-    const executiveSummary = buildCopilotSummary({ name, organization, webResults, newsResults, speakingResults, awardResults, knownFor, checks });
+    const executiveSummary = buildPersonLookupSummary({ name, organization, webResults, newsResults, speakingResults, awardResults, knownFor, checks });
     const knownForSummary = buildKnownForSummary(name, knownFor, checks);
 
     return {
