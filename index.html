@@ -10,25 +10,22 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="app">
+<div id="entryScreen" class="entry-screen">
+  <div class="entry-card">
+    <img src="assets/evg-logo.svg" alt="EVG">
+    <h1>The Reputation Report™</h1>
+    <p>Choose how you want to enter the platform.</p>
+    <div class="entry-actions">
+      <button data-entry="admin">Admin Workspace</button>
+      <button data-entry="client">Executive Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="appShell">
   <aside class="sidebar">
     <div class="logo"><img src="assets/evg-logo.svg" alt="EVG"></div>
-    <nav id="nav">
-      <button data-page="dashboard" class="active">Dashboard</button>
-      <button data-page="client">Client Portal</button>
-      <button data-page="admin">Admin Portal</button>
-      <button data-page="intake">Intake</button>
-      <button data-page="individual">Individual Intelligence</button>
-      <button data-page="organization">Organization Intelligence</button>
-      <button data-page="rep360">Reputation 360™</button>
-      <button data-page="assetRecovery">Asset Recovery™</button>
-      <button data-page="assets">Manual Asset Manager</button>
-      <button data-page="speaking">Speaking Intelligence</button>
-      <button data-page="bio">Bio Development™</button>
-      <button data-page="social">Reviews + Social</button>
-      <button data-page="timeline">Timeline of Influence™</button>
-      <button data-page="settings">Settings</button>
-    </nav>
+    <nav id="nav"></nav>
     <div class="promo">
       <h3>The Reputation Report™</h3>
       <p>See what the world sees before the world decides who you are.</p>
@@ -39,35 +36,33 @@
     <header class="topbar">
       <div>
         <h1>The Reputation Report™</h1>
-        <p>Visibility & Reputation Intelligence Platform</p>
+        <p id="modeLabel">Admin Workspace</p>
       </div>
       <div class="top-actions">
-        <button class="primary" data-action="new-report">+ New Report</button>
+        <button class="primary admin-only" data-action="new-report">+ New Report</button>
         <button class="primary" data-action="export-pdf">Export PDF</button>
-        <div class="userpill"><span id="topInitials">SM</span><div><strong>EVG Admin</strong><small>Admin Portal</small></div></div>
+        <button class="outline" data-action="switch-entry">Switch View</button>
+        <div class="userpill"><span id="topInitials">SM</span><div><strong id="userRole">EVG Admin</strong><small id="userMode">Admin Workspace</small></div></div>
       </div>
     </header>
 
     <section id="dashboard" class="page active">
-      <div class="grid top-grid">
+      <div class="grid top-grid admin-only">
         <div class="card search-card">
-          <label>Search by name, LinkedIn URL, website, or organization</label>
-          <div class="search-row">
-            <input id="searchInput" value="Stefanie Magness" placeholder="Enter name, LinkedIn URL, website, or organization">
-            <button class="primary" data-action="identity-review">GENERATE REPORT</button>
-          </div>
-          <div class="helper-grid">
-            <input id="linkedinInput" placeholder="Optional LinkedIn URL">
+          <label>Generate report by name and LinkedIn URL</label>
+          <div class="search-stack">
+            <input id="nameInput" value="Stefanie Magness" placeholder="Full name">
+            <input id="linkedinInput" placeholder="LinkedIn URL required">
+            <input id="orgInput" placeholder="Optional organization">
             <input id="websiteInput" placeholder="Optional website">
-            <input id="locationInput" placeholder="Optional city/state">
-            <input id="industryInput" placeholder="Optional industry">
+            <button class="primary" data-action="generate-report">GENERATE REPORT</button>
           </div>
-          <p class="muted">Identity Match Review™ opens first so you can confirm the right person before the report updates.</p>
+          <p class="muted">LinkedIn is used to help confirm the right person. The old Identity Match popup has been removed.</p>
         </div>
         <div class="card report-count">
           <h4>Reports This Month</h4>
           <div id="reportCount">0</div>
-          <button class="linkbtn" data-page-link="admin">View report history →</button>
+          <button class="linkbtn" data-page-link="reports">View report history →</button>
         </div>
       </div>
 
@@ -80,9 +75,9 @@
             <span class="badge" id="reportType">Reputation 360™</span>
             <span class="badge" id="confidenceBadge">Confidence: 98%</span>
           </div>
-          <div class="actions">
+          <div class="actions admin-only">
             <button class="outline" data-page-link="intake">UPDATE INFORMATION</button>
-            <button class="dark" data-page-link="assetRecovery">VIEW ASSETS</button>
+            <button class="dark" data-page-link="assets">ADD ASSET</button>
           </div>
         </div>
         <div class="card score-card">
@@ -124,10 +119,10 @@
           <div id="knownTags" class="tags"></div>
         </div>
         <div class="card panel">
-          <h4>Risk Alerts</h4>
-          <div id="riskList"></div>
+          <h4>Recommendations</h4>
+          <div id="recommendations"></div>
         </div>
-        <div class="card quick">
+        <div class="card quick admin-only">
           <h4>Quick Actions</h4>
           <button data-page-link="assetRecovery">Create Asset Inventory <span>›</span></button>
           <button data-page-link="rep360">Reputation 360™ <span>›</span></button>
@@ -139,38 +134,20 @@
       </div>
     </section>
 
-    <section id="client" class="page"></section>
-    <section id="admin" class="page"></section>
-    <section id="intake" class="page"></section>
-    <section id="individual" class="page"></section>
-    <section id="organization" class="page"></section>
+    <section id="reports" class="page"></section>
+    <section id="clients" class="page admin-only"></section>
+    <section id="intake" class="page admin-only"></section>
     <section id="rep360" class="page"></section>
-    <section id="assetRecovery" class="page"></section>
+    <section id="assetRecovery" class="page admin-only"></section>
     <section id="assets" class="page"></section>
     <section id="speaking" class="page"></section>
     <section id="bio" class="page"></section>
     <section id="social" class="page"></section>
     <section id="timeline" class="page"></section>
-    <section id="settings" class="page"></section>
+    <section id="uploads" class="page client-only"></section>
+    <section id="settings" class="page admin-only"></section>
   </main>
 </div>
-
-<div class="modal-backdrop" id="identityBackdrop"></div>
-<aside class="identity-modal" id="identityModal">
-  <div class="drawer-head">
-    <div>
-      <h2>Identity Match Review™</h2>
-      <p id="identitySubtitle" class="muted">Which person or organization do you mean?</p>
-    </div>
-    <button class="drawer-close" data-action="close-identity">Close</button>
-  </div>
-  <div id="identityMatches"></div>
-  <div class="detail-item">
-    <strong>Not seeing the right person?</strong>
-    <small>Add details manually, then build the report from that profile.</small>
-    <br><button class="outline" data-action="manual-identity">Add details manually</button>
-  </div>
-</aside>
 
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <aside class="drawer" id="drawer">
@@ -181,7 +158,7 @@
     </div>
     <button class="drawer-close" data-action="close-drawer">Close</button>
   </div>
-  <button class="outline" data-action="restore-hidden">Restore removed items</button>
+  <button class="outline admin-only" data-action="restore-hidden">Restore removed items</button>
   <div id="drawerContent"></div>
 </aside>
 
