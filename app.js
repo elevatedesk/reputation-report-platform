@@ -11,6 +11,7 @@ function initials(name){ return (name||"RR").trim().split(/\s+/).map(x=>x[0]).jo
 let mode = localStorage.getItem("rr_mode") || "";
 let clients = load("rr_clients", []);
 let activeClientId = load("rr_active_client_id", "");
+let currentPage = "dashboard";
 let hidden = load("rr_hidden", {});
 let bioCheckedAll = load("rr_bio_checked_by_client", {});
 
@@ -67,8 +68,23 @@ function saveAll(){
   save("rr_active_client_id", activeClientId);
 }
 function activeClient(){
-  return clients.find(c=>c.id===activeClientId) || clients[0] || null;
+  let client = clients.find(c=>c.id===activeClientId) || clients[0] || null;
+  if(client && client.id !== activeClientId){
+    activeClientId = client.id;
+    saveAll();
+  }
+  return client;
 }
+function setActiveClient(id, pageToKeep){
+  const exists = clients.some(c => c.id === id);
+  if(!exists) return;
+  activeClientId = id;
+  saveAll();
+  render();
+  setPage(pageToKeep || currentPage || "dashboard");
+  toast("Switched client.");
+}
+
 function currentReport(){
   const c = activeClient();
   if(!c) return defaultReport(null);
@@ -107,28 +123,26 @@ function setActiveBioChecked(values){
 
 function clientSwitcher(title){
   if(mode !== "admin") return "";
+  const c = activeClient();
   return `<div class="card panel" style="margin-bottom:18px">
     <h4>${title || "Active Client"}</h4>
     <p class="muted">Switch clients here. This section updates to the selected client.</p>
-    <div class="search-stack" style="grid-template-columns:1fr 180px">
+    <div class="search-stack" style="grid-template-columns:1fr 170px 150px">
       <select class="globalClientSelect">
         ${clients.map(c=>`<option value="${c.id}" ${c.id===activeClientId?"selected":""}>${c.name}${c.organization ? " | " + c.organization : ""}</option>`).join("")}
       </select>
       <button class="outline" data-page-link="clients">Manage Clients</button>
+      ${c ? `<button class="remove-btn" data-delete-client="${c.id}">Delete Client</button>` : ""}
     </div>
   </div>`;
 }
 
 function bindGlobalClientSelectors(){
   $$(".globalClientSelect").forEach(sel=>{
-    sel.onchange = e => {
-      activeClientId = e.target.value;
-      saveAll();
-      render();
-      toast("Switched client.");
-    };
+    sel.onchange = e => setActiveClient(e.target.value, currentPage);
   });
 }
+
 
 function enterMode(newMode){
   ensureSeed();
@@ -156,6 +170,7 @@ function buildNav(){
 }
 
 function setPage(page){
+  currentPage = page;
   $$(".page").forEach(p=>p.classList.remove("active"));
   const el = $("#"+page);
   if(el) el.classList.add("active");
@@ -190,20 +205,30 @@ function addClient(){
   toast("Client added and selected.");
 }
 function selectClient(id){
-  activeClientId = id;
-  saveAll();
-  render();
-  setPage("dashboard");
-  toast("Client selected.");
+  setActiveClient(id, "dashboard");
 }
 function deleteClient(id){
-  if(!confirm("Delete this client from this browser storage?")) return;
+  const client = clients.find(c=>c.id===id);
+  if(!client) return;
+  const ok = confirm(`Delete client "${client.name}"?
+
+This deletes intake, reports, assets, scores, notes, manual additions, and bio checklist saved in this browser. This cannot be undone.`);
+  if(!ok) return;
+
   clients = clients.filter(c=>c.id!==id);
-  if(activeClientId === id) activeClientId = clients[0]?.id || "";
+  delete bioCheckedAll[id];
+  delete hidden[id];
+
+  save("rr_bio_checked_by_client", bioCheckedAll);
+  save("rr_hidden", hidden);
+
+  activeClientId = clients[0]?.id || "";
   saveAll();
   render();
   setPage("clients");
+  toast("Client deleted.");
 }
+
 function updateClient(){
   const c = activeClient();
   if(!c){toast("Select a client first."); return;}
@@ -553,7 +578,7 @@ function clientTable(list=clients){
     <td><span class="status">${c.status||"Draft"}</span></td>
     <td>${(c.reports||[]).length}</td>
     <td>${(c.assets||[]).length}</td>
-    <td><button class="outline" data-select-client="${c.id}">Open</button><button class="remove-btn" data-delete-client="${c.id}">Delete</button></td>
+    <td><button class="outline" data-select-client="${c.id}">Open</button><button class="remove-btn" data-delete-client="${c.id}">Delete Client</button>${c.id===activeClientId ? "<br><small class='muted'>Active client</small>" : ""}</td>
   </tr>`).join("")}</tbody></table>`;
 }
 
@@ -665,7 +690,7 @@ function bindDynamic(){
   $$("[data-delete-asset]").forEach(b=>b.onclick=()=>deleteAsset(b.dataset.deleteAsset));
   $$("[data-bio]").forEach(cb=>cb.onchange=()=>{const v=cb.dataset.bio; let checked=activeBioChecked(); checked=cb.checked?[...new Set([...checked,v])]:checked.filter(x=>x!==v); setActiveBioChecked(checked); render(); setPage("bio");});
   $$("[data-bio-format]").forEach(b=>b.onclick=()=>generateBio(b.dataset.bioFormat));
-  $("#activeClientSelect") && ($("#activeClientSelect").onchange=e=>{activeClientId=e.target.value; saveAll(); render();});
+  $("#activeClientSelect") && ($("#activeClientSelect").onchange=e=>setActiveClient(e.target.value, "dashboard"));
   $("#clientSearch") && ($("#clientSearch").oninput=filterClients);
   $("#clientStatusFilter") && ($("#clientStatusFilter").onchange=filterClients);
   bindGlobalClientSelectors();
@@ -675,3 +700,26 @@ $("#drawerBackdrop").onclick=closeDrawer;
 ensureSeed();
 if(mode){ enterMode(mode); } else { $("#entryScreen").style.display="grid"; $("#appShell").classList.remove("active"); }
 bindDynamic();
+
+
+document.addEventListener("change", function(e){
+  if(e.target && e.target.classList && e.target.classList.contains("globalClientSelect")){
+    setActiveClient(e.target.value, currentPage);
+  }
+  if(e.target && e.target.id === "activeClientSelect"){
+    setActiveClient(e.target.value, "dashboard");
+  }
+});
+
+document.addEventListener("click", function(e){
+  const deleteBtn = e.target.closest ? e.target.closest("[data-delete-client]") : null;
+  if(deleteBtn){
+    e.preventDefault();
+    deleteClient(deleteBtn.dataset.deleteClient);
+  }
+  const selectBtn = e.target.closest ? e.target.closest("[data-select-client]") : null;
+  if(selectBtn){
+    e.preventDefault();
+    selectClient(selectBtn.dataset.selectClient);
+  }
+});
