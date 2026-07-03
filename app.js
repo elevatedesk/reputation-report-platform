@@ -75,21 +75,59 @@ function activeClient(){
   }
   return client;
 }
+function currentReport(){
+  const c = activeClient();
+  if(!c) return defaultReport(null);
+  const report = (c.reports || [])[0];
+
+  // Prevent one client's report from showing under another client.
+  if(report && report.clientId === c.id && (report.personName || "").trim().toLowerCase() === (c.name || "").trim().toLowerCase()){
+    return report;
+  }
+
+  return defaultReport(c);
+}
+
 function setActiveClient(id, pageToKeep){
   const exists = clients.some(c => c.id === id);
   if(!exists) return;
   activeClientId = id;
   saveAll();
+
+  const c = activeClient();
+  if($("#nameInput")) $("#nameInput").value = c?.name || "";
+  if($("#linkedinInput")) $("#linkedinInput").value = c?.linkedin || "";
+  if($("#orgInput")) $("#orgInput").value = c?.organization || "";
+  if($("#websiteInput")) $("#websiteInput").value = c?.website || "";
+
   render();
   setPage(pageToKeep || currentPage || "dashboard");
   toast("Switched client.");
 }
 
-function currentReport(){
+function wipeActiveClientData(){
   const c = activeClient();
-  if(!c) return defaultReport(null);
-  return c.reports?.[0] || defaultReport(c);
+  if(!c){ toast("Select a client first."); return; }
+  const ok = confirm(`Wipe clean data for "${c.name}"?\n\nThis clears reports, assets, removed items, bio checklist, status, and notes for this client only. The client record will stay.`);
+  if(!ok) return;
+
+  c.reports = [];
+  c.assets = [];
+  c.status = "Draft";
+  c.notes = "";
+  delete hidden[c.id];
+  delete bioCheckedAll[c.id];
+
+  save("rr_hidden", hidden);
+  save("rr_bio_checked_by_client", bioCheckedAll);
+  saveAll();
+
+  render();
+  setPage("dashboard");
+  toast("Client data wiped clean. You can start a new search.");
 }
+
+
 function activeAssets(){
   return activeClient()?.assets || [];
 }
@@ -123,26 +161,29 @@ function setActiveBioChecked(values){
 
 function clientSwitcher(title){
   if(mode !== "admin") return "";
-  const c = activeClient();
   return `<div class="card panel" style="margin-bottom:18px">
     <h4>${title || "Active Client"}</h4>
     <p class="muted">Switch clients here. This section updates to the selected client.</p>
-    <div class="search-stack" style="grid-template-columns:1fr 170px 150px">
+    <div class="search-stack" style="grid-template-columns:1fr 170px 210px">
       <select class="globalClientSelect">
         ${clients.map(c=>`<option value="${c.id}" ${c.id===activeClientId?"selected":""}>${c.name}${c.organization ? " | " + c.organization : ""}</option>`).join("")}
       </select>
       <button class="outline" data-page-link="clients">Manage Clients</button>
-      ${c ? `<button class="remove-btn" data-delete-client="${c.id}">Delete Client</button>` : ""}
+      <button class="remove-btn" data-action="wipe-client">Wipe Clean Client Data</button>
     </div>
   </div>`;
 }
 
 function bindGlobalClientSelectors(){
   $$(".globalClientSelect").forEach(sel=>{
-    sel.onchange = e => setActiveClient(e.target.value, currentPage);
+    sel.onchange = e => {
+      activeClientId = e.target.value;
+      saveAll();
+      render();
+      toast("Switched client.");
+    };
   });
 }
-
 
 function enterMode(newMode){
   ensureSeed();
@@ -228,7 +269,6 @@ This deletes intake, reports, assets, scores, notes, manual additions, and bio c
   setPage("clients");
   toast("Client deleted.");
 }
-
 function updateClient(){
   const c = activeClient();
   if(!c){toast("Select a client first."); return;}
@@ -344,6 +384,8 @@ function render(){
 
   if($("#activeClientSelect")){
     $("#activeClientSelect").innerHTML = clients.map(c=>`<option value="${c.id}" ${c.id===activeClientId?"selected":""}>${c.name} ${c.organization ? " | " + c.organization : ""}</option>`).join("");
+    $("#activeClientSelect").value = activeClientId;
+    $("#activeClientSelect").onchange = e => setActiveClient(e.target.value, "dashboard");
     fillSearchFromClient();
   }
 
@@ -578,7 +620,7 @@ function clientTable(list=clients){
     <td><span class="status">${c.status||"Draft"}</span></td>
     <td>${(c.reports||[]).length}</td>
     <td>${(c.assets||[]).length}</td>
-    <td><button class="outline" data-select-client="${c.id}">Open</button><button class="remove-btn" data-delete-client="${c.id}">Delete Client</button>${c.id===activeClientId ? "<br><small class='muted'>Active client</small>" : ""}</td>
+    <td><button class="outline" data-select-client="${c.id}">Open</button><button class="remove-btn" data-delete-client="${c.id}">Delete Client</button></td>
   </tr>`).join("")}</tbody></table>`;
 }
 
@@ -629,7 +671,7 @@ function assetManagerPage(){
 }
 function assetList(){
   const assets = activeAssets();
-  return assets.length ? assets.map(a=>`<div class="detail-item"><strong>${a.title}</strong><small>${a.type} · ${a.source} · ${a.date}<br>${a.role} · ${a.status}<br>${a.notes||""}</small>${mode==="admin"?`<br><button class="verify-btn" data-toast="Marked verified.">Mark Verified</button><button class="outline" data-edit-asset="${a.id}">Edit</button><button class="remove-btn" data-delete-asset="${a.id}">Delete</button>`:""}</div>`).join("") : `<p class="muted">No assets added yet.</p>`;
+  return assets.length ? assets.map(a=>`<div class="detail-item"><strong>${a.title}</strong><small>${a.type} · ${a.source} · ${a.date}<br>${a.role} · ${a.status}<br>${a.notes||""}</small>${mode==="admin"?`<br><button class="verify-btn" data-toast="Marked verified.">Mark Verified</button><button class="outline" data-edit-asset="${a.id}">Edit</button><button class="remove-btn" data-delete-asset="${a.id}">Delete Client</button>`:""}</div>`).join("") : `<p class="muted">No assets added yet.</p>`;
 }
 function speakingPage(){ const r=currentReport(); return clientSwitcher("Active Client") + `<div class="card panel"><h4>Speaking Intelligence</h4><p class="muted">Checks conferences, summits, forums, keynotes, panels, workshops, breakout sessions, webinars, podcasts, university lectures, and community events tied to the selected client.</p>${(r.speakingEngagements||[]).map(x=>detail(x.title,`${x.eventType} · ${x.role} · ${x.date}`,x.note)).join("") || "<p class='muted'>No speaking signals yet.</p>"}</div>`; }
 
@@ -671,6 +713,7 @@ function bindDynamic(){
   $$("[data-page]").forEach(b=>b.onclick=()=>setPage(b.dataset.page));
   $$("[data-page-link]").forEach(b=>b.onclick=()=>setPage(b.dataset.pageLink));
   $$("[data-action='generate-report']").forEach(b=>b.onclick=runResearch);
+  $$("[data-action='wipe-client']").forEach(b=>b.onclick=wipeActiveClientData);
   $$("[data-action='new-report']").forEach(b=>b.onclick=()=>setPage("dashboard"));
   $$("[data-action='export-pdf']").forEach(b=>b.onclick=()=>window.print());
   $$("[data-action='switch-entry']").forEach(b=>b.onclick=()=>{localStorage.removeItem("rr_mode"); location.reload();});
@@ -703,23 +746,28 @@ bindDynamic();
 
 
 document.addEventListener("change", function(e){
-  if(e.target && e.target.classList && e.target.classList.contains("globalClientSelect")){
-    setActiveClient(e.target.value, currentPage);
-  }
   if(e.target && e.target.id === "activeClientSelect"){
     setActiveClient(e.target.value, "dashboard");
+  }
+  if(e.target && e.target.classList && e.target.classList.contains("globalClientSelect")){
+    setActiveClient(e.target.value, currentPage);
   }
 });
 
 document.addEventListener("click", function(e){
+  const wipeBtn = e.target.closest ? e.target.closest("[data-action='wipe-client']") : null;
+  if(wipeBtn){
+    e.preventDefault();
+    wipeActiveClientData();
+  }
   const deleteBtn = e.target.closest ? e.target.closest("[data-delete-client]") : null;
   if(deleteBtn){
     e.preventDefault();
     deleteClient(deleteBtn.dataset.deleteClient);
   }
-  const selectBtn = e.target.closest ? e.target.closest("[data-select-client]") : null;
-  if(selectBtn){
+  const openBtn = e.target.closest ? e.target.closest("[data-select-client]") : null;
+  if(openBtn){
     e.preventDefault();
-    selectClient(selectBtn.dataset.selectClient);
+    selectClient(openBtn.dataset.selectClient);
   }
 });
